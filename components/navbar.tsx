@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import {
   Navbar as NextUINavbar,
   NavbarContent,
@@ -8,7 +9,7 @@ import {
   NavbarBrand,
   NavbarItem,
   NavbarMenuItem,
-} from "@nextui-org/navbar";
+} from "@nextui-org/react";
 
 import { Button } from "@nextui-org/button";
 import { Link } from "@nextui-org/link";
@@ -28,8 +29,9 @@ import {
 import { ConnectButton } from "@mysten/dapp-kit";
 
 export const Navbar = () => {
+  const pathname = usePathname();
   return (
-    <NextUINavbar maxWidth="xl" position="sticky">
+    <NextUINavbar maxWidth="xl" position="sticky" className="h-16 sm:h-20">
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
         <NavbarBrand as="li" className="gap-3 max-w-fit">
           <NextLink className="flex justify-start items-center gap-1" href="/">
@@ -71,7 +73,7 @@ export const Navbar = () => {
           </Link>
           <ThemeSwitch />
         </NavbarItem>
-        <ConnectButton className="hidden sm:flex" />
+        {pathname !== "/" && <ConnectButton className="hidden sm:flex" />}
       </NavbarContent>
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">

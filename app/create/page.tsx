@@ -1,13 +1,14 @@
 'use client';
 
 import { title } from "@/components/primitives";
-import { useSuiClientQuery, ConnectButton, useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
+import { useSuiClientQuery, useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 import '@mysten/dapp-kit/dist/index.css';
 import { Transaction } from '@mysten/sui/transactions';
-import { bcs } from '@mysten/sui/bcs';
 import { useState } from 'react';
 import { Button } from "@nextui-org/react";
 import React from "react";
+import { MIST_PER_SUI } from '@mysten/sui/utils';
+
 
 
 function QueryObjects() {
@@ -66,6 +67,35 @@ function CreatePool() {
   );
 }
 
+function WalletBalance() {
+  const my_account = useCurrentAccount();
+  const balance = (balance: Record<string, any>) => {
+    return Number.parseInt(balance.totalBalance) / Number(MIST_PER_SUI);
+  };
+
+
+  const { data, isPending, error, refetch } = useSuiClientQuery('getBalance', {
+    owner: my_account?.address as string,
+  });
+  console.log(`balance data:  ${data && balance(data)} SUI`);
+
+  // todo 判断 amount、balance
+
+  // todo merge coins
+
+  // create pool
+
+
+  return (
+    <div>
+      <pre>{JSON.stringify(data, null, 2)}</pre>  
+    </div>
+  )
+
+
+
+  
+}
 
 
 export default function AboutPage() {
@@ -75,6 +105,7 @@ export default function AboutPage() {
         <h1 className={title()}>Create</h1>
         {/* <QueryObjects /> */}
         <CreatePool />
+        <WalletBalance />
       </div>
     </section>
   );

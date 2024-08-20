@@ -24,6 +24,7 @@ import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { cn } from "@/utils";
 import { now, getLocalTimeZone } from "@internationalized/date";
 import { FixedDatesPicker } from "./fixed-dates-picker";
+import { IconBack } from "@/components/icons";
 
 function QueryObjects() {
   const { data, isPending, error, refetch } = useSuiClientQuery(
@@ -141,11 +142,17 @@ export default function CreatePage() {
 
   return (
     <section className="flex flex-col  gap-4 py-8 md:py-10">
-      <div className="inline-block max-w-lg ">
-        <h1 className={title()}>Create Stream</h1>
+      <CreatePool />
+      <WalletBalance />
+      <div className="flex items-center pb-8">
+        <IconBack
+          className="border border-white rounded-full mr-4"
+          width={35}
+          height={35}
+          color="white"
+        />
+        <h2 className={cn(title(), "!text-3xl")}>Create Stream</h2>
         {/* <QueryObjects /> */}
-        <CreatePool />
-        <WalletBalance />
       </div>
       <div className="panel flex flex-col lg:flex-row gap-8">
         <div className="form flex-1 border border-gray-200 rounded-lg p-4 md:p-8 sm:grid sm:grid-cols-2 gap-4">

@@ -31,7 +31,12 @@ import { ConnectButton } from "@mysten/dapp-kit";
 export const Navbar = () => {
   const pathname = usePathname();
   return (
-    <NextUINavbar maxWidth="xl" position="sticky" className="h-16 sm:h-20">
+    <NextUINavbar
+      maxWidth="xl"
+      position="sticky"
+      className="h-16 sm:h-20"
+      isBordered
+    >
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
         <NavbarBrand as="li" className="gap-3 max-w-fit">
           <NextLink className="flex justify-start items-center gap-1" href="/">

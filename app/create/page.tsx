@@ -90,25 +90,80 @@ function CreatePool() {
 }
 
 function WalletBalance() {
-  const my_account = useCurrentAccount();
-  const balance = (balance: Record<string, any>) => {
-    return Number.parseInt(balance.totalBalance) / Number(MIST_PER_SUI);
-  };
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
-  const { data, isPending, error, refetch } = useSuiClientQuery("getBalance", {
+  // 来自于用户的输入框
+  const input_amount = 100;
+
+
+  const my_account = useCurrentAccount();
+  const { data, isPending, error, refetch } = useSuiClientQuery('getBalance', {
     owner: my_account?.address as string,
   });
-  console.log(`balance data:  ${data && balance(data)} SUI`);
+  
+  console.log(`balance data:  ${data}`);
+  const my_balance = Number.parseInt(data?.totalBalance ?? '0') / Number(MIST_PER_SUI);
 
   // todo 判断 amount、balance
+  // if (my_balance <= input_amount) {
+  //   return <div>余额不足</div>;
+  // }
 
-  // todo merge coins
+  // 获取 SUI coin 对象
+  const mySuiCoins = useSuiClientQuery(
+    'getOwnedObjects',
+    {
+      owner: my_account?.address as string,
+      filter: {
+        MatchAll: [
+          {
+            StructType: "0x2::coin::Coin<0x2::sui::SUI>",
+          },
+          {
+            AddressOwner: my_account?.address as string,
+          },
+        ],
+      },
+      options: {
+        showOwner: true,
+        showType: true,
+      },
+    },
+  );
+
+  console.log(`mySuiCoins: ${JSON.stringify(mySuiCoins, null, 2)}`);
+  const mySuiCoinIds = mySuiCoins?.data?.data?.map((item) => item?.data?.objectId) ?? [];
+  console.log(`mySuiCoinIds: ${mySuiCoinIds}`);
+  console.log(`mySuiCoinIds 0: ${mySuiCoinIds[0] as string}`);
+
+  // join_vec
+  const tx = new Transaction();
+  tx.moveCall({
+    target: "0x2::pay::join_vec",
+    arguments: [
+      tx.object(mySuiCoinIds[0] as string),
+      ...mySuiCoinIds.slice(1).filter((id): id is string => id !== undefined).map((id) => tx.object(id)),
+    ],
+  });
+
+  signAndExecuteTransaction(
+    {
+      transaction: tx,
+    },
+    {
+      onSuccess: (result) => {
+        console.log('executed create pool transaction', result);
+      },
+    },
+  );
 
   // create pool
 
   return (
     <div>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+      {/* <pre>{JSON.stringify(data, null, 2)}</pre>   */}
+      <pre>{JSON.stringify(mySuiCoins?.data, null, 2)}</pre>  
+
     </div>
   );
 }

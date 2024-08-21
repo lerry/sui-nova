@@ -1,12 +1,18 @@
 "use client";
 
+import { useEffect, useCallback } from "react";
 import { title } from "@/components/primitives";
 import Image from "next/image";
 import {
+  useSuiClient,
+  useWallets,
+  useSignTransaction,
   useSuiClientQuery,
   useCurrentAccount,
   useSignAndExecuteTransaction,
 } from "@mysten/dapp-kit";
+import { getFaucetHost, requestSuiFromFaucetV0 } from '@mysten/sui/faucet';
+
 import "@mysten/dapp-kit/dist/index.css";
 import { Transaction } from "@mysten/sui/transactions";
 import { useState } from "react";
@@ -89,8 +95,7 @@ function CreatePool() {
   );
 }
 
-function WalletBalance() {
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+function WalletBalance({ updateSuiCoins }: { updateSuiCoins: (coins: any) => void }) {
 
   // 来自于用户的输入框
   const input_amount = 100;
@@ -100,8 +105,8 @@ function WalletBalance() {
   const { data, isPending, error, refetch } = useSuiClientQuery('getBalance', {
     owner: my_account?.address as string,
   });
-  
-  console.log(`balance data:  ${data}`);
+
+  console.log(`balance data:  ${JSON.stringify(data, null, 2)}`);
   const my_balance = Number.parseInt(data?.totalBalance ?? '0') / Number(MIST_PER_SUI);
 
   // todo 判断 amount、balance
@@ -131,39 +136,19 @@ function WalletBalance() {
     },
   );
 
-  console.log(`mySuiCoins: ${JSON.stringify(mySuiCoins, null, 2)}`);
-  const mySuiCoinIds = mySuiCoins?.data?.data?.map((item) => item?.data?.objectId) ?? [];
-  console.log(`mySuiCoinIds: ${mySuiCoinIds}`);
-  console.log(`mySuiCoinIds 0: ${mySuiCoinIds[0] as string}`);
-
-  // join_vec
-  const tx = new Transaction();
-  tx.moveCall({
-    target: "0x2::pay::join_vec",
-    arguments: [
-      tx.object(mySuiCoinIds[0] as string),
-      ...mySuiCoinIds.slice(1).filter((id): id is string => id !== undefined).map((id) => tx.object(id)),
-    ],
-  });
-
-  signAndExecuteTransaction(
-    {
-      transaction: tx,
-    },
-    {
-      onSuccess: (result) => {
-        console.log('executed create pool transaction', result);
-      },
-    },
-  );
-
-  // create pool
+  // 使用 useEffect 来更新 SUI coins 和打印日志
+  useEffect(() => {
+    if (mySuiCoins.data) {
+      updateSuiCoins(mySuiCoins.data.data);
+      console.log(`mySuiCoins: ${JSON.stringify(mySuiCoins.data, null, 2)}`);
+    }
+  }, [mySuiCoins.data, updateSuiCoins]);
 
   return (
     <div>
-      {/* <pre>{JSON.stringify(data, null, 2)}</pre>   */}
-      <pre>{JSON.stringify(mySuiCoins?.data, null, 2)}</pre>  
-
+      {isPending ? <div>Loading...</div> :
+        <pre>{JSON.stringify(mySuiCoins?.data, null, 2)}</pre>
+      }
     </div>
   );
 }
@@ -194,11 +179,58 @@ export default function CreatePage() {
   const [showFixed, setShowFixed] = useState(true);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [customPeriod, setCustomPeriod] = useState({ years: 0, days: 0 });
+  const [suiCoins, setSuiCoins] = useState([]);
 
+
+
+  const updateSuiCoins = useCallback((coins: any) => {
+    setSuiCoins(coins);
+  }, []);
+
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const { mutateAsync: signTransaction } = useSignTransaction();
+  const client = useSuiClient();
+  const currentAccount = useCurrentAccount();
+  async function handleCreate() {
+    // await requestSuiFromFaucetV0({
+    //   host: getFaucetHost('testnet'),
+    //   recipient: '0xfe951e8cb178e2f2653258a280e8f53e88cc0066b924bf2f35c32f6e4cadb6f9'
+    // });
+
+    const mySuiCoinIds = suiCoins?.map((item: any) => item?.data?.objectId).filter(Boolean) ?? [];
+
+    if (mySuiCoinIds.length === 0) {
+      console.error('没有可用的 SUI 币');
+      return;
+    }
+
+    const tx = new Transaction();
+    tx.mergeCoins(mySuiCoinIds[0], mySuiCoinIds.slice(1));
+    console.log(mySuiCoinIds[0]);
+    console.log(mySuiCoinIds.slice(1));
+    console.log(tx);
+
+
+
+
+    console.log(`tx: ${JSON.stringify(tx, null, 2)}`);
+    signAndExecuteTransaction(
+      {
+        transaction: tx,
+      }, {
+      onSuccess: (result) => {
+        console.log('executed create pool transaction', result);
+      },
+    });
+
+
+    console.log(`交易: ${JSON.stringify(tx, null, 2)}`);
+
+  }
   return (
     <section className="flex flex-col  gap-4 py-8 md:py-10">
-      <CreatePool />
-      <WalletBalance />
+      {/* <CreatePool /> */}
+      <WalletBalance updateSuiCoins={updateSuiCoins} />
       <div className="flex items-center pb-8">
         <IconBack
           className="border border-white rounded-full mr-4"
@@ -230,7 +262,9 @@ export default function CreatePage() {
               }}
               renderValue={(items) => {
                 return items.map((item) => (
-                  <div key={item.key}>{item.rendered}</div>
+                  <div key={item.key}>
+                    {item.rendered}
+                  </div>
                 ));
               }}
             >
@@ -371,7 +405,7 @@ export default function CreatePage() {
           <div className="show-summary border border-gray-200 rounded-lg p-4 md:p-8">
             <div className="flex flex-col gap-4"></div>
           </div>
-          <Button className="w-full mt-4" color="primary" size="lg">
+          <Button className="w-full mt-4" color="primary" size="lg" onClick={handleCreate}>
             Create
           </Button>
         </div>

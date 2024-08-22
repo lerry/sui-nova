@@ -90,10 +90,10 @@ export function FixedDatesPicker({
                 label="Years"
                 placeholder="Years"
                 value={_peroid.years.toString()}
-                onChange={(e) =>
-                  setCustomPeriod({
+                onValueChange={(value) =>
+                  setPeriod({
                     ...customPeriod,
-                    years: parseInt(e.target.value),
+                    years: parseInt(value),
                   })
                 }
               />
@@ -102,10 +102,10 @@ export function FixedDatesPicker({
                 label="Days"
                 placeholder="Days"
                 value={_peroid.days.toString()}
-                onChange={(e) =>
-                  setCustomPeriod({
+                onValueChange={(value) =>
+                  setPeriod({
                     ...customPeriod,
-                    days: parseInt(e.target.value),
+                    days: parseInt(value),
                   })
                 }
               />

@@ -22,22 +22,54 @@ import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { cn } from "@/utils";
 import { IconBack } from "@/components/icons";
 
-import { FormDataProps } from "./types";
-import { CreateForm } from "./form";
+import { FormDataProps, TokenProps } from "./types";
+import { CreateForm } from "./create-form";
 import { SummaryPanel } from "./summary-panel";
+
+
+const MIST_PER_USDC = 1000000;
+// 0x2::coin::Coin<0x2::sui::SUI>
+const tokens: TokenProps[] = [
+  {
+    symbol: "SUI",
+    coinType: "0x2::sui::SUI",
+    perValue: Number(MIST_PER_SUI),
+  },
+  // {
+  //   symbol: "DAI",
+  //   coinType: "0x2::coin::Coin<0x2::sui::SUI>",
+  // },
+  {
+    symbol: "USDC",
+    coinType: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+    perValue: Number(MIST_PER_USDC),
+  },
+  // {
+  //   label: "USDT",
+  //   value: "USDT",
+  //   coinType: "0x2::coin::Coin<0x2::sui::SUI>",
+  // },
+
+  // {
+  //   label: "ETH",
+  //   value: "ETH",
+  //   coinType: "0x2::coin::Coin<0x2::sui::SUI>",
+  // },
+];
 function QueryObjects() {
+  const currentAccount = useCurrentAccount();
+
   const { data, isPending, error, refetch } = useSuiClientQuery(
-    "getOwnedObjects",
+    "getAllBalances",
     {
-      owner:
-        "0xc494732d09de23389dbe99cb2f979965940a633cf50d55caa80ed9e4fc4e521e",
+      owner: currentAccount?.address as string,
     },
   );
 
   if (isPending) {
     return <div>Loading...</div>;
   }
-
+  console.log('obj', data);
   return <pre>{JSON.stringify(data, null, 2)}</pre>;
 }
 
@@ -96,9 +128,9 @@ function WalletBalance({
   // 来自于用户的输入框
   const input_amount = 100;
 
-  const my_account = useCurrentAccount();
+  const currentAccount = useCurrentAccount();
   const { data, isPending, error, refetch } = useSuiClientQuery("getBalance", {
-    owner: my_account?.address as string,
+    owner: currentAccount?.address as string,
   });
 
   console.log(`balance data:  ${JSON.stringify(data, null, 2)}`);
@@ -112,14 +144,14 @@ function WalletBalance({
 
   // 获取 SUI coin 对象
   const mySuiCoins = useSuiClientQuery("getOwnedObjects", {
-    owner: my_account?.address as string,
+    owner: currentAccount?.address as string,
     filter: {
       MatchAll: [
         {
           StructType: "0x2::coin::Coin<0x2::sui::SUI>",
         },
         {
-          AddressOwner: my_account?.address as string,
+          AddressOwner: currentAccount?.address as string,
         },
       ],
     },
@@ -150,30 +182,18 @@ function WalletBalance({
     </div>
   );
 }
-const tokens: { label: string; value: string }[] = [
-  {
-    label: "DAI",
-    value: "DAI",
-  },
-  {
-    label: "USDC",
-    value: "USDC",
-  },
-  {
-    label: "USDT",
-    value: "USDT",
-  },
-];
+
+
 
 function Warning() {
-  const { connectionStatus } = useCurrentWallet();
+  const { isConnected } = useCurrentWallet();
   const [warningText, setWarningText] = useState("");
 
   useEffect(() => {
-    if (connectionStatus !== "connected") {
+    if (!isConnected) {
       setWarningText("Please connect your wallet to continue");
     }
-  }, [connectionStatus]);
+  }, [isConnected]);
   return (
     <div className="flex justify-center items-center">
       <Chip color="warning" size="lg">
@@ -185,22 +205,50 @@ function Warning() {
 
 export default function CreatePage() {
   const { currentWallet, connectionStatus } = useCurrentWallet();
+  const [balance, setBalance] = useState(0);
+  const currentAccount = useCurrentAccount();
+  const { data: balanceData } = useSuiClientQuery("getAllBalances", {
+    owner: currentAccount?.address as string,
+  });
 
   const [form, setForm] = useState<FormDataProps>({
-    token: tokens[0].value,
+    token: tokens[0],
     amount: 100,
-    cancelable: true,
+    cancelable: false,
     recipient: "0x999666",
     duration: 1000,
   });
 
   const [suiCoins, setSuiCoins] = useState([]);
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
   const updateSuiCoins = useCallback((coins: any) => {
     setSuiCoins(coins);
   }, []);
 
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  // 将 useSuiClientQuery 移到这里
+  // const { data: balanceData, isPending, error, refetch } = useSuiClientQuery(
+  //   "getBalance",
+  //   {
+  //     owner: currentAccount?.address as string,
+  //   },
+  //   {
+  //     enabled: connectionStatus === "connected" && !!currentAccount?.address,
+  //   }
+  // );
+
+  useEffect(() => {
+    if (balanceData) {
+      const tokenBalance = balanceData.find((item: any) => item.coinType === form.token.coinType);
+      if (tokenBalance) {
+        const balance = Number.parseInt(tokenBalance.totalBalance ?? "0") / Number(form.token.perValue);
+        setBalance(balance);
+      } else {
+        setBalance(0);
+      }
+    }
+  }, [balanceData, form.token]);
+
   async function handleCreate() {
     const mySuiCoinIds =
       suiCoins?.map((item: any) => item?.data?.objectId).filter(Boolean) ?? [];
@@ -234,6 +282,7 @@ export default function CreatePage() {
   return (
     <section className="flex flex-col  gap-4 py-8 md:py-10">
       {/* <CreatePool /> */}
+      <QueryObjects />
       <WalletBalance updateSuiCoins={updateSuiCoins} />
       <div className="flex items-center pb-8">
         <IconBack
@@ -249,25 +298,18 @@ export default function CreatePage() {
         <CreateForm formData={form} updateForm={updateForm} tokens={tokens} />
 
         <div className="summary basis-[460px] ">
-          <SummaryPanel formData={form} />
+          <SummaryPanel formData={form} balance={balance} />
 
           {/* <Warning /> */}
-          {connectionStatus === "connected" && (
-            <Button
-              className={cn(
-                "w-full mt-4",
-                connectionStatus !== "connected"
-                  ? "bg-gray-400 !cursor-not-allowed"
-                  : "",
-              )}
-              color="primary"
-              size="lg"
-              onClick={handleCreate}
-              isDisabled={!currentWallet || connectionStatus !== "connected"}
-            >
-              Create
-            </Button>
-          )}
+          <Button
+            className="w-full mt-4"
+            color="primary"
+            size="lg"
+            onClick={handleCreate}
+            isDisabled={!currentWallet || connectionStatus !== "connected"}
+          >
+            Create
+          </Button>
         </div>
       </div>
     </section>

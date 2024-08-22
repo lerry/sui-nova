@@ -1,22 +1,30 @@
 import { FormDataProps } from "./types";
 import Image from "next/image";
+import dayjs from "dayjs";
 
-function ConnectedSummary({ formData }: { formData: FormDataProps }) {
+
+
+export function SummaryPanel({ formData, balance }: { formData: FormDataProps, balance: number }) {
   const tokenItem = (
     <div className="flex items-center gap-1">
       <Image
-        src={`/tokens/${formData.token}.png`}
+        src={`/tokens/${formData.token.symbol}.svg`}
         alt="Token"
         width={20}
         height={20}
       />
-      {formData.token}
+      {formData.token.symbol}
     </div>
   );
+
   const items = [
     {
       label: "Token",
       value: tokenItem,
+    },
+    {
+      label: "Wallet Balance",
+      value: balance,
     },
     {
       label: "Amount",
@@ -25,6 +33,12 @@ function ConnectedSummary({ formData }: { formData: FormDataProps }) {
     {
       label: "Recipient",
       value: formData.recipient,
+    },
+    {
+      label: "End Date",
+      value: formData.duration
+        ? dayjs().add(formData.duration, "seconds").format("DD/MM/YYYY HH:mm")
+        : "N/A",
     },
   ];
   return (
@@ -45,8 +59,4 @@ function ConnectedSummary({ formData }: { formData: FormDataProps }) {
       </div>
     </>
   );
-}
-
-export function SummaryPanel({ formData }: { formData: any }) {
-  return <ConnectedSummary formData={formData} />;
 }

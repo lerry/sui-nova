@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 
 import "@mysten/dapp-kit/dist/index.css";
@@ -16,22 +16,27 @@ import {
 } from "@nextui-org/react";
 import React from "react";
 import { cn } from "@/utils";
-import { now, getLocalTimeZone } from "@internationalized/date";
 import { FixedDatesPicker } from "./fixed-dates-picker";
-import { FormDataProps } from "./types";
+import { FormDataProps, TokenProps } from "./types";
 
 export function CreateForm({
   tokens,
   updateForm,
   formData,
 }: {
-  tokens: { label: string; value: string }[];
+  tokens: TokenProps[];
   updateForm: (form: FormDataProps) => void;
   formData: FormDataProps;
 }) {
   const [showFixed, setShowFixed] = useState(true);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [customPeriod, setCustomPeriod] = useState({ years: 0, days: 0 });
+
+  useEffect(() => {
+    const seconds = customPeriod.years * 365 * 24 * 60 * 60 + customPeriod.days * 24 * 60 * 60;
+    updateForm({ ...formData, duration: seconds });
+  }, [customPeriod]);
+
   return (
     <div className="form flex-1 border border-gray-200 rounded-lg p-4 md:p-8 sm:grid sm:grid-cols-2 gap-4">
       <div className="form-item">
@@ -40,12 +45,17 @@ export function CreateForm({
           items={tokens}
           selectionMode="single"
           label="Token"
+          size="lg"
           placeholder="Select a token"
           labelPlacement="outside"
-          selectedKeys={[formData.token]}
+          selectedKeys={formData.token.symbol ? [formData.token.symbol] : []}
           onSelectionChange={(selectedKeys) => {
-            if (selectedKeys.currentKey) {
-              updateForm({ ...formData, token: selectedKeys.currentKey });
+            if (selectedKeys instanceof Set && selectedKeys.size > 0) {
+              const selectedSymbol = Array.from(selectedKeys)[0] as string;
+              const token = tokens.find((item) => item.symbol === selectedSymbol);
+              if (token) {
+                updateForm({ ...formData, token: token });
+              }
             }
           }}
           classNames={{
@@ -58,18 +68,18 @@ export function CreateForm({
             ));
           }}
         >
-          {(item) => (
-            <SelectItem key={item.value} textValue={item.label}>
+          {(token: TokenProps) => (
+            <SelectItem key={token.symbol} textValue={token.symbol}>
               <div className="flex gap-2 items-center">
                 <Image
                   width={24}
                   height={24}
-                  alt={item.label}
+                  alt={token.symbol}
                   className="flex-shrink-0"
-                  src={`/tokens/${item.label}.png`}
+                  src={`/tokens/${token.symbol}.svg`}
                 />
                 <div className="flex flex-col">
-                  <span className="text-small">{item.label}</span>
+                  <span className="text-small">{token.symbol}</span>
                 </div>
               </div>
             </SelectItem>
@@ -77,8 +87,8 @@ export function CreateForm({
         </Select>
       </div>
       <div className="form-item">
-        <div className="show-label">
-          <p className="text-sm">Cancelable</p>
+        <div className="show-label mb-1">
+          <p className="text-medium text-foreground">Cancelable</p>
         </div>
         <Switch
           isSelected={formData.cancelable}
@@ -87,9 +97,9 @@ export function CreateForm({
           }}
           classNames={{
             base: cn(
-              "inline-flex flex-row-reverse w-full max-w-sm bg-content1 hover:bg-content2 items-center",
-              "justify-between cursor-pointer rounded-lg gap-2 p-4 border-2 border-transparent",
-              "data-[selected=true]:border-primary",
+              "inline-flex flex-row-reverse w-full max-w-sm hover:bg-content2 items-center",
+              "justify-between cursor-pointer rounded-lg gap-2 p-4 border-2",
+              "data-[selected=true]:border-primary border-default-200 h-12 rounded-large",
             ),
             wrapper: "p-0 h-4 overflow-visible",
             thumb: cn(

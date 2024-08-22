@@ -71,7 +71,7 @@ export const Navbar = () => {
           </Link>
           <ThemeSwitch />
         </NavbarItem>
-        {pathname !== "/" && <ConnectButton className="hidden sm:flex" />}
+        {pathname !== "/" && <ConnectButton className="hidden sm:flex bg-primary" />}
       </NavbarContent>
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">

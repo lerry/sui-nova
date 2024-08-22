@@ -159,7 +159,7 @@ export function CreateForm({
               <Button className="w-full" size="lg" onClick={onOpenChange}>
                 {customPeriod.years > 0 || customPeriod.days > 0
                   ? `Duration: ${customPeriod.years > 0 ? `${customPeriod.years} ${customPeriod.years > 1 ? "years" : "year"}` : ""} ${customPeriod.days > 0 ? `${customPeriod.days} ${customPeriod.days > 1 ? "days" : "day"}` : ""}`
-                  : "Choose Date"}
+                  : "Choose Duration"}
               </Button>
               <FixedDatesPicker
                 isOpen={isOpen}

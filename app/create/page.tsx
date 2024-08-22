@@ -126,21 +126,8 @@ function WalletBalance({
   updateSuiCoins: (coins: any) => void;
 }) {
   // 来自于用户的输入框
-  const input_amount = 100;
 
   const currentAccount = useCurrentAccount();
-  const { data, isPending, error, refetch } = useSuiClientQuery("getBalance", {
-    owner: currentAccount?.address as string,
-  });
-
-  console.log(`balance data:  ${JSON.stringify(data, null, 2)}`);
-  const my_balance =
-    Number.parseInt(data?.totalBalance ?? "0") / Number(MIST_PER_SUI);
-
-  // todo 判断 amount、balance
-  // if (my_balance <= input_amount) {
-  //   return <div>余额不足</div>;
-  // }
 
   // 获取 SUI coin 对象
   const mySuiCoins = useSuiClientQuery("getOwnedObjects", {
@@ -169,37 +156,33 @@ function WalletBalance({
     }
   }, [mySuiCoins.data, updateSuiCoins]);
 
-  return (
-    <div>
-      {isPending ? (
-        <div>Loading...</div>
-      ) : (
-        <div>
-          Your have {mySuiCoins?.data?.data?.length} transactions
-          {/* <pre>{JSON.stringify(mySuiCoins?.data, null, 2)}</pre> */}
-        </div>
-      )}
-    </div>
-  );
 }
 
 
 
-function Warning() {
+function Warning({ balance, form }: { balance: number, form: FormDataProps }) {
   const { isConnected } = useCurrentWallet();
   const [warningText, setWarningText] = useState("");
 
   useEffect(() => {
     if (!isConnected) {
       setWarningText("Please connect your wallet to continue");
+    } else if (balance < form.amount) {
+      setWarningText("Insufficient balance");
+    } else if (!form.duration) {
+      setWarningText("Please select a duration");
+    } else {
+      setWarningText("");
     }
-  }, [isConnected]);
+  }, [isConnected, balance, form.amount, form.duration]);
   return (
-    <div className="flex justify-center items-center">
-      <Chip color="warning" size="lg">
-        {warningText}
-      </Chip>
-    </div>
+    warningText && (
+      <div className="w-full mt-4 ">
+        <Chip color="warning" size="lg" className="w-full">
+          {warningText}
+        </Chip>
+      </div>
+    ) || null
   );
 }
 
@@ -283,7 +266,6 @@ export default function CreatePage() {
     <section className="flex flex-col  gap-4 py-8 md:py-10">
       {/* <CreatePool /> */}
       <QueryObjects />
-      <WalletBalance updateSuiCoins={updateSuiCoins} />
       <div className="flex items-center pb-8">
         <IconBack
           className="border border-white rounded-full mr-4"
@@ -300,13 +282,13 @@ export default function CreatePage() {
         <div className="summary basis-[460px] ">
           <SummaryPanel formData={form} balance={balance} />
 
-          {/* <Warning /> */}
+          <Warning balance={balance} form={form} />
           <Button
             className="w-full mt-4"
             color="primary"
             size="lg"
             onClick={handleCreate}
-            isDisabled={!currentWallet || connectionStatus !== "connected"}
+            isDisabled={!currentWallet || connectionStatus !== "connected" || balance < form.amount || !form.duration}
           >
             Create
           </Button>

@@ -24,6 +24,7 @@ import {
   Switch,
   DatePicker,
   useDisclosure,
+  MenuItem,
 } from "@nextui-org/react";
 import React from "react";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
@@ -31,8 +32,11 @@ import { cn } from "@/utils";
 import { now, getLocalTimeZone } from "@internationalized/date";
 import { FixedDatesPicker } from "./fixed-dates-picker";
 import { IconBack } from "@/components/icons";
+import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
+import { bcs } from '@mysten/sui/bcs';
 
-function QueryObjects() {
+
+function QueryObjectsDemo() {
   const { data, isPending, error, refetch } = useSuiClientQuery(
     "getOwnedObjects",
     {
@@ -95,12 +99,7 @@ function CreatePool() {
   );
 }
 
-function WalletBalance({ updateSuiCoins }: { updateSuiCoins: (coins: any) => void }) {
-
-  // 来自于用户的输入框
-  const input_amount = 100;
-
-
+function QueryWalletBalance() {
   const my_account = useCurrentAccount();
   const { data, isPending, error, refetch } = useSuiClientQuery('getBalance', {
     owner: my_account?.address as string,
@@ -109,11 +108,14 @@ function WalletBalance({ updateSuiCoins }: { updateSuiCoins: (coins: any) => voi
   console.log(`balance data:  ${JSON.stringify(data, null, 2)}`);
   const my_balance = Number.parseInt(data?.totalBalance ?? '0') / Number(MIST_PER_SUI);
 
-  // todo 判断 amount、balance
-  // if (my_balance <= input_amount) {
-  //   return <div>余额不足</div>;
-  // }
+  return (
+      <div>My wallet balance is : {my_balance} SUI.</div>
+  );
+}
 
+function CreatePoolAndPayStream({ updateSuiCoins }: { updateSuiCoins: (coins: any) => void }) {
+
+  const my_account = useCurrentAccount();
   // 获取 SUI coin 对象
   const mySuiCoins = useSuiClientQuery(
     'getOwnedObjects',
@@ -140,15 +142,37 @@ function WalletBalance({ updateSuiCoins }: { updateSuiCoins: (coins: any) => voi
   useEffect(() => {
     if (mySuiCoins.data) {
       updateSuiCoins(mySuiCoins.data.data);
-      console.log(`mySuiCoins: ${JSON.stringify(mySuiCoins.data, null, 2)}`);
+      console.log(`sui coins----: ${JSON.stringify(mySuiCoins.data, null, 2)}`);
     }
   }, [mySuiCoins.data, updateSuiCoins]);
 
+
+  // const tx = new Transaction();
+
+  // const tmpCoins = mySuiCoins?.data?.data;
+  // const primaryCoinObj = tx.object(tmpCoins?.[0] as string);
+  // const mergeCoinObjs = tmpCoins?.slice(1) as string[];
+
+  // tx.moveCall({
+  //   target:
+  //     "0x2::pay::join_vec",
+  //   arguments: [
+  //     primaryCoinObj,
+  //     // [tx.object("0x1"), tx.object("0x2")],
+  //     tx.pure(bcs.vector(bcs.Address).serialize(mergeCoinObjs))
+  //   ],
+  // });
+
+
+
+
+  // tx.splitCoins(tx.gas, [100, 200]);
+  // tx.moveCall({ target: '0x2::devnet_nft::mint', arguments: [tx.pure.string(name), tx.pure.string(description), tx.pure.string(image)] });
+
+
   return (
     <div>
-      {isPending ? <div>Loading...</div> :
         <pre>{JSON.stringify(mySuiCoins?.data, null, 2)}</pre>
-      }
     </div>
   );
 }
@@ -210,8 +234,7 @@ export default function CreatePage() {
     console.log(mySuiCoinIds.slice(1));
     console.log(tx);
 
-
-
+    tx.splitCoins(tx.gas, [100]);
 
     console.log(`tx: ${JSON.stringify(tx, null, 2)}`);
     signAndExecuteTransaction(
@@ -219,7 +242,8 @@ export default function CreatePage() {
         transaction: tx,
       }, {
       onSuccess: (result) => {
-        console.log('executed create pool transaction', result);
+          console.log('executed create pool transaction', result);
+
       },
     });
 
@@ -229,8 +253,7 @@ export default function CreatePage() {
   }
   return (
     <section className="flex flex-col  gap-4 py-8 md:py-10">
-      {/* <CreatePool /> */}
-      <WalletBalance updateSuiCoins={updateSuiCoins} />
+      <CreatePoolAndPayStream updateSuiCoins={updateSuiCoins} />
       <div className="flex items-center pb-8">
         <IconBack
           className="border border-white rounded-full mr-4"
@@ -239,7 +262,9 @@ export default function CreatePage() {
           color="white"
         />
         <h2 className={cn(title(), "!text-3xl")}>Create Stream</h2>
-        {/* <QueryObjects /> */}
+      </div>
+      <div>
+        <h3><QueryWalletBalance /></h3>
       </div>
       <div className="panel flex flex-col lg:flex-row gap-8">
         <div className="form flex-1 border border-gray-200 rounded-lg p-4 md:p-8 sm:grid sm:grid-cols-2 gap-4">

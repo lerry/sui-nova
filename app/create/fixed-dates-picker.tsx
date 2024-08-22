@@ -1,3 +1,4 @@
+"use client";
 import {
   Button,
   Modal,
@@ -64,7 +65,15 @@ export function FixedDatesPicker({
             <h2 className="">Suggested periods</h2>
             <div className="flex gap-2">
               {preDefinedDates.map((date, index) => (
-                <Button key={index} onClick={() => handleChoosePeriod(date)}>
+                <Button
+                  key={index}
+                  onClick={() => handleChoosePeriod(date)}
+                  color={
+                    _peroid.years === date.years && _peroid.days === date.days
+                      ? "primary"
+                      : "default"
+                  }
+                >
                   {date.years > 0
                     ? `${date.years} ${date.years > 1 ? "years" : "year"}`
                     : ""}{" "}
@@ -101,7 +110,13 @@ export function FixedDatesPicker({
                 }
               />
             </div>
-            <Button onClick={() => handleSetPeriod()}>Set</Button>
+            <Button
+              color="primary"
+              className="text-medium"
+              onClick={() => handleSetPeriod()}
+            >
+              Set
+            </Button>
           </>
         </ModalBody>
       </ModalContent>

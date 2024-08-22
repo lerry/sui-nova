@@ -3,35 +3,28 @@
 import { useEffect, useCallback } from "react";
 import { title } from "@/components/primitives";
 import Image from "next/image";
+
 import {
   useSuiClient,
-  useWallets,
+  useCurrentWallet,
   useSignTransaction,
   useSuiClientQuery,
   useCurrentAccount,
   useSignAndExecuteTransaction,
 } from "@mysten/dapp-kit";
-import { getFaucetHost, requestSuiFromFaucetV0 } from '@mysten/sui/faucet';
 
 import "@mysten/dapp-kit/dist/index.css";
 import { Transaction } from "@mysten/sui/transactions";
 import { useState } from "react";
-import {
-  Button,
-  Select,
-  SelectItem,
-  Input,
-  Switch,
-  DatePicker,
-  useDisclosure,
-} from "@nextui-org/react";
+import { Button, Chip } from "@nextui-org/react";
 import React from "react";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { cn } from "@/utils";
-import { now, getLocalTimeZone } from "@internationalized/date";
-import { FixedDatesPicker } from "./fixed-dates-picker";
 import { IconBack } from "@/components/icons";
 
+import { FormDataProps } from "./types";
+import { CreateForm } from "./form";
+import { SummaryPanel } from "./summary-panel";
 function QueryObjects() {
   const { data, isPending, error, refetch } = useSuiClientQuery(
     "getOwnedObjects",
@@ -95,19 +88,22 @@ function CreatePool() {
   );
 }
 
-function WalletBalance({ updateSuiCoins }: { updateSuiCoins: (coins: any) => void }) {
-
+function WalletBalance({
+  updateSuiCoins,
+}: {
+  updateSuiCoins: (coins: any) => void;
+}) {
   // 来自于用户的输入框
   const input_amount = 100;
 
-
   const my_account = useCurrentAccount();
-  const { data, isPending, error, refetch } = useSuiClientQuery('getBalance', {
+  const { data, isPending, error, refetch } = useSuiClientQuery("getBalance", {
     owner: my_account?.address as string,
   });
 
   console.log(`balance data:  ${JSON.stringify(data, null, 2)}`);
-  const my_balance = Number.parseInt(data?.totalBalance ?? '0') / Number(MIST_PER_SUI);
+  const my_balance =
+    Number.parseInt(data?.totalBalance ?? "0") / Number(MIST_PER_SUI);
 
   // todo 判断 amount、balance
   // if (my_balance <= input_amount) {
@@ -115,26 +111,23 @@ function WalletBalance({ updateSuiCoins }: { updateSuiCoins: (coins: any) => voi
   // }
 
   // 获取 SUI coin 对象
-  const mySuiCoins = useSuiClientQuery(
-    'getOwnedObjects',
-    {
-      owner: my_account?.address as string,
-      filter: {
-        MatchAll: [
-          {
-            StructType: "0x2::coin::Coin<0x2::sui::SUI>",
-          },
-          {
-            AddressOwner: my_account?.address as string,
-          },
-        ],
-      },
-      options: {
-        showOwner: true,
-        showType: true,
-      },
+  const mySuiCoins = useSuiClientQuery("getOwnedObjects", {
+    owner: my_account?.address as string,
+    filter: {
+      MatchAll: [
+        {
+          StructType: "0x2::coin::Coin<0x2::sui::SUI>",
+        },
+        {
+          AddressOwner: my_account?.address as string,
+        },
+      ],
     },
-  );
+    options: {
+      showOwner: true,
+      showType: true,
+    },
+  });
 
   // 使用 useEffect 来更新 SUI coins 和打印日志
   useEffect(() => {
@@ -146,14 +139,18 @@ function WalletBalance({ updateSuiCoins }: { updateSuiCoins: (coins: any) => voi
 
   return (
     <div>
-      {isPending ? <div>Loading...</div> :
-        <pre>{JSON.stringify(mySuiCoins?.data, null, 2)}</pre>
-      }
+      {isPending ? (
+        <div>Loading...</div>
+      ) : (
+        <div>
+          Your have {mySuiCoins?.data?.data?.length} transactions
+          {/* <pre>{JSON.stringify(mySuiCoins?.data, null, 2)}</pre> */}
+        </div>
+      )}
     </div>
   );
 }
-
-const coins: { label: string; value: string }[] = [
+const tokens: { label: string; value: string }[] = [
   {
     label: "DAI",
     value: "DAI",
@@ -168,65 +165,72 @@ const coins: { label: string; value: string }[] = [
   },
 ];
 
+function Warning() {
+  const { connectionStatus } = useCurrentWallet();
+  const [warningText, setWarningText] = useState("");
+
+  useEffect(() => {
+    if (connectionStatus !== "connected") {
+      setWarningText("Please connect your wallet to continue");
+    }
+  }, [connectionStatus]);
+  return (
+    <div className="flex justify-center items-center">
+      <Chip color="warning" size="lg">
+        {warningText}
+      </Chip>
+    </div>
+  );
+}
+
 export default function CreatePage() {
-  const [form, setForm] = useState({
-    token: coins[0].value,
+  const { currentWallet, connectionStatus } = useCurrentWallet();
+
+  const [form, setForm] = useState<FormDataProps>({
+    token: tokens[0].value,
     amount: 100,
+    cancelable: true,
     recipient: "0x999666",
     duration: 1000,
-    cancelable: true,
   });
-  const [showFixed, setShowFixed] = useState(true);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [customPeriod, setCustomPeriod] = useState({ years: 0, days: 0 });
+
   const [suiCoins, setSuiCoins] = useState([]);
-
-
 
   const updateSuiCoins = useCallback((coins: any) => {
     setSuiCoins(coins);
   }, []);
 
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const { mutateAsync: signTransaction } = useSignTransaction();
-  const client = useSuiClient();
-  const currentAccount = useCurrentAccount();
   async function handleCreate() {
-    // await requestSuiFromFaucetV0({
-    //   host: getFaucetHost('testnet'),
-    //   recipient: '0xfe951e8cb178e2f2653258a280e8f53e88cc0066b924bf2f35c32f6e4cadb6f9'
-    // });
-
-    const mySuiCoinIds = suiCoins?.map((item: any) => item?.data?.objectId).filter(Boolean) ?? [];
+    const mySuiCoinIds =
+      suiCoins?.map((item: any) => item?.data?.objectId).filter(Boolean) ?? [];
 
     if (mySuiCoinIds.length === 0) {
-      console.error('没有可用的 SUI 币');
+      console.error("没有可用的 SUI 币");
       return;
     }
 
     const tx = new Transaction();
     tx.mergeCoins(mySuiCoinIds[0], mySuiCoinIds.slice(1));
-    console.log(mySuiCoinIds[0]);
-    console.log(mySuiCoinIds.slice(1));
-    console.log(tx);
-
-
-
-
-    console.log(`tx: ${JSON.stringify(tx, null, 2)}`);
+    // console.log(`tx: ${JSON.stringify(tx, null, 2)}`);
     signAndExecuteTransaction(
       {
         transaction: tx,
-      }, {
-      onSuccess: (result) => {
-        console.log('executed create pool transaction', result);
       },
-    });
-
+      {
+        onSuccess: (result) => {
+          console.log("executed create pool transaction", result);
+        },
+      },
+    );
 
     console.log(`交易: ${JSON.stringify(tx, null, 2)}`);
-
   }
+
+  function updateForm(form: any) {
+    setForm(form);
+  }
+
   return (
     <section className="flex flex-col  gap-4 py-8 md:py-10">
       {/* <CreatePool /> */}
@@ -242,172 +246,28 @@ export default function CreatePage() {
         {/* <QueryObjects /> */}
       </div>
       <div className="panel flex flex-col lg:flex-row gap-8">
-        <div className="form flex-1 border border-gray-200 rounded-lg p-4 md:p-8 sm:grid sm:grid-cols-2 gap-4">
-          <div className="form-item">
-            <Select
-              items={coins}
-              selectionMode="single"
-              label="Token"
-              placeholder="Select a token"
-              labelPlacement="outside"
-              selectedKeys={[form.token]}
-              onSelectionChange={(selectedKeys) => {
-                if (selectedKeys.currentKey) {
-                  setForm({ ...form, token: selectedKeys.currentKey });
-                }
-              }}
-              classNames={{
-                base: "max-w-xs",
-                trigger: "h-12",
-              }}
-              renderValue={(items) => {
-                return items.map((item) => (
-                  <div key={item.key}>
-                    {item.rendered}
-                  </div>
-                ));
-              }}
-            >
-              {(item) => (
-                <SelectItem key={item.value} textValue={item.label}>
-                  <div className="flex gap-2 items-center">
-                    <Image
-                      width={24}
-                      height={24}
-                      alt={item.label}
-                      className="flex-shrink-0"
-                      src={`/coins/${item.label}.png`}
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-small">{item.label}</span>
-                    </div>
-                  </div>
-                </SelectItem>
-              )}
-            </Select>
-          </div>
-          <div className="form-item">
-            <div className="show-label">
-              <p className="text-sm">Cancelable</p>
-            </div>
-            <Switch
-              isSelected={form.cancelable}
-              onValueChange={(value: boolean) => {
-                setForm({ ...form, cancelable: value });
-              }}
-              classNames={{
-                base: cn(
-                  "inline-flex flex-row-reverse w-full max-w-sm bg-content1 hover:bg-content2 items-center",
-                  "justify-between cursor-pointer rounded-lg gap-2 p-4 border-2 border-transparent",
-                  "data-[selected=true]:border-primary",
-                ),
-                wrapper: "p-0 h-4 overflow-visible",
-                thumb: cn(
-                  "w-6 h-6 border-2 shadow-lg",
-                  "group-data-[hover=true]:border-primary",
-                  //selected
-                  "group-data-[selected=true]:ml-6",
-                  // pressed
-                  "group-data-[pressed=true]:w-7",
-                  "group-data-[selected]:group-data-[pressed]:ml-4",
-                ),
-              }}
-            >
-              <div className="flex flex-col gap-1">
-                <p className="text-medium">Cancelability </p>
-              </div>
-            </Switch>
-          </div>
-          <div className="form-item">
-            <Input
-              label="Amount"
-              placeholder="Fill in the amount"
-              type="number"
-              size="lg"
-              labelPlacement="outside"
-              value={form.amount.toString()}
-              onValueChange={(value) => {
-                setForm({ ...form, amount: Number(value) });
-              }}
-              classNames={{
-                base: "max-w-xs",
-              }}
-            />
-          </div>
-          <div className="form-item">
-            <Input
-              label="Recipient"
-              placeholder="Fill in the recipient address"
-              type="text"
-              size="lg"
-              labelPlacement="outside"
-              value={form.recipient}
-              onValueChange={(value) => {
-                setForm({ ...form, recipient: value });
-              }}
-              classNames={{
-                base: "max-w-xs",
-              }}
-            />
-          </div>
-          <div className="form-item col-span-2 grid grid-cols-5 gap-4 items-center">
-            {showFixed && (
-              <>
-                <div className="col-span-3">
-                  <Button className="w-full" size="lg" onClick={onOpenChange}>
-                    {customPeriod.years > 0 || customPeriod.days > 0
-                      ? `${customPeriod.years > 0 ? `${customPeriod.years} ${customPeriod.years > 1 ? "years" : "year"}` : ""} ${customPeriod.days > 0 ? `${customPeriod.days} ${customPeriod.days > 1 ? "days" : "day"}` : ""}`
-                      : "Choose Date"}
-                  </Button>
-                  <FixedDatesPicker
-                    isOpen={isOpen}
-                    onOpenChange={onOpenChange}
-                    customPeriod={customPeriod}
-                    setCustomPeriod={setCustomPeriod}
-                  />
-                </div>
-              </>
-            )}
-            {!showFixed && (
-              <>
-                <DatePicker
-                  className="col-span-2"
-                  label="Event Date"
-                  variant="bordered"
-                  hideTimeZone
-                  showMonthAndYearPickers
-                  defaultValue={now(getLocalTimeZone())}
-                />
-                <DatePicker
-                  className="col-span-2"
-                  label="Event Date"
-                  variant="bordered"
-                  hideTimeZone
-                  showMonthAndYearPickers
-                  defaultValue={now(getLocalTimeZone())}
-                />
-              </>
-            )}
-            <div className="col-span-2 pr-4">
-              <Button
-                size="lg"
-                className="w-full"
-                onClick={() => {
-                  setShowFixed(!showFixed);
-                }}
-              >
-                {showFixed ? "Duration" : "Fixed dates"}
-              </Button>
-            </div>
-          </div>
-        </div>
+        <CreateForm formData={form} updateForm={updateForm} tokens={tokens} />
+
         <div className="summary basis-[460px] ">
-          <div className="show-summary border border-gray-200 rounded-lg p-4 md:p-8">
-            <div className="flex flex-col gap-4"></div>
-          </div>
-          <Button className="w-full mt-4" color="primary" size="lg" onClick={handleCreate}>
-            Create
-          </Button>
+          <SummaryPanel formData={form} />
+
+          {/* <Warning /> */}
+          {connectionStatus === "connected" && (
+            <Button
+              className={cn(
+                "w-full mt-4",
+                connectionStatus !== "connected"
+                  ? "bg-gray-400 !cursor-not-allowed"
+                  : "",
+              )}
+              color="primary"
+              size="lg"
+              onClick={handleCreate}
+              isDisabled={!currentWallet || connectionStatus !== "connected"}
+            >
+              Create
+            </Button>
+          )}
         </div>
       </div>
     </section>

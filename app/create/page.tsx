@@ -75,7 +75,7 @@ export default function CreatePage() {
 
   async function CreatePoolAndPayStream() {
 
-    const { mutate: execInitializePoolAndStream } =useSignAndExecuteTransaction();
+    const { mutate: signAndExecute } =useSignAndExecuteTransaction();
 
     const depositAmount = 2;
     const recipient = "0x123";
@@ -83,28 +83,28 @@ export default function CreatePage() {
 
     const tx = new Transaction();
 
-    // split coins
+    // 1.split coins
     const [depositCoin] = tx.splitCoins(tx.gas, [MIST_PER_SUI * BigInt(depositAmount)]);
 
-    // Calling smart contract function to create payer pool
-    const [payerPoolId] = tx.moveCall({
-      target: `0x8096b927f041dbcb156aa0dfa8e6804fe8c9383d9ed15dee5fae5c2d70cd7dd7::liner_pay::createAndDeposit`,
+    // 2.Calling smart contract function to create payer pool
+    const [payerPoolAddr] = tx.moveCall({
+      target: `0x29379cc662cd00266b9bb87db9cadfdafd1bd5215bc4b3dc9779653a66e01a0e::liner_pay::createAndDeposit`,
       arguments: [
         depositCoin
       ],
     });
 
-    // Calling smart contract function to create stream
+    // 3.Calling smart contract function to create stream
     const [recivierCardId] = tx.moveCall({
-      target: `0x8096b927f041dbcb156aa0dfa8e6804fe8c9383d9ed15dee5fae5c2d70cd7dd7::liner_pay::createStream`,
+      target: `0x29379cc662cd00266b9bb87db9cadfdafd1bd5215bc4b3dc9779653a66e01a0e::liner_pay::createStream`,
       arguments: [
-        tx.object(payerPoolId),
+        tx.object(payerPoolAddr),
         tx.object(recipient),
         tx.pure.option('u8', amountPerSec),
       ],
     });
 
-    execInitializePoolAndStream(
+    signAndExecute(
       {
         transaction: tx,
         // options: {

@@ -199,32 +199,20 @@ export default function CreatePage() {
   const { data: balanceData } = useSuiClientQuery("getAllBalances", {
     owner: currentAccount?.address as string,
   });
+  const { data: coinData } = useSuiClientQuery("getAllCoins", {
+    owner: currentAccount?.address as string,
+  });
 
   const [form, setForm] = useState<FormDataProps>({
     token: tokens[0],
-    amount: 100,
-    cancelable: false,
-    recipient: "0x999666",
-    duration: 1000,
+    amount: 1,
+    cancelable: true,
+    recipient:
+      "0x7f5f79103d86d9c5c4436e199e3db4dc0dc5103d403e5e44cdeefc2f9324fe1d",
+    duration: 0,
   });
 
-  const [suiCoins, setSuiCoins] = useState([]);
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-
-  const updateSuiCoins = useCallback((coins: any) => {
-    setSuiCoins(coins);
-  }, []);
-
-  // 将 useSuiClientQuery 移到这里
-  // const { data: balanceData, isPending, error, refetch } = useSuiClientQuery(
-  //   "getBalance",
-  //   {
-  //     owner: currentAccount?.address as string,
-  //   },
-  //   {
-  //     enabled: connectionStatus === "connected" && !!currentAccount?.address,
-  //   }
-  // );
 
   useEffect(() => {
     if (balanceData) {
@@ -236,7 +224,6 @@ export default function CreatePage() {
         const balance =
           Number.parseInt(tokenBalance.totalBalance ?? "0") /
           Number(form.token.perValue);
-
         setBalance(balance);
       } else {
         setBalance(0);
@@ -245,19 +232,41 @@ export default function CreatePage() {
   }, [balanceData, form.token]);
 
   async function handleCreate() {
-    const mySuiCoinIds =
-      suiCoins?.map((item: any) => item?.data?.objectId).filter(Boolean) ?? [];
-
-    if (mySuiCoinIds.length === 0) {
-      console.error("没有可用的 SUI 币");
-
-      return;
-    }
+    const coinIds =
+      coinData?.data
+        .filter((item: any) => item.coinType === form.token.coinType)
+        .map((item: any) => item.coinObjectId) || [];
 
     const tx = new Transaction();
 
-    tx.mergeCoins(mySuiCoinIds[0], mySuiCoinIds.slice(1));
-    // console.log(`tx: ${JSON.stringify(tx, null, 2)}`);
+    // 确保有足够的 SUI 代币于 gas
+    const suiCoins =
+      coinData?.data.filter((item: any) => item.coinType === "0x2::sui::SUI") ||
+      [];
+    if (suiCoins.length === 0) {
+      console.error("No SUI coins found for gas payment");
+      return;
+    }
+
+    // 如果选择的是 SUI，我们需要确保留下足够的 SUI 用于 gas
+    tx.mergeCoins(
+      suiCoins[0].coinObjectId,
+      suiCoins.slice(1).map((coin) => coin.coinObjectId),
+    );
+    const gasAmount = BigInt(100000000); // 设置一个合理的 gas 预算
+    const [gasCoin, toUseCoin] = tx.splitCoins(suiCoins[0].coinObjectId, [
+      gasAmount,
+      BigInt(form.amount) * BigInt(form.token.perValue),
+    ]);
+    // tx.setGasBudget(100000000);
+    // tx.setGasPayment([suiCoins[0]]);
+
+    // tx.moveCall({
+    //   target:
+    //     "0x8096b927f041dbcb156aa0dfa8e6804fe8c9383d9ed15dee5fae5c2d70cd7dd7::liner_pay::createAndDeposit",
+    //   arguments: [toUseCoin],
+    // });
+
     signAndExecuteTransaction(
       {
         transaction: tx,
@@ -265,6 +274,9 @@ export default function CreatePage() {
       {
         onSuccess: (result) => {
           console.log("executed create pool transaction", result);
+        },
+        onError: (error) => {
+          console.error("executed create pool transaction", error);
         },
       },
     );
@@ -289,10 +301,16 @@ export default function CreatePage() {
         />
         <h2 className={cn(title(), "!text-3xl")}>Create Stream</h2>
         {/* <QueryObjects /> */}
+        {JSON.stringify(coinData, null, 2)}
       </div>
-      <div className="panel flex flex-col lg:flex-row gap-4 lg:gap-8 items-start">
-        <CreateForm formData={form} tokens={tokens} updateForm={updateForm} />
-        <div className="summary w-full lg:basis-[460px] ">
+      <div className="panel flex gap-4 lg:gap-8 ">
+        <CreateForm
+          className=" flex-1"
+          formData={form}
+          tokens={tokens}
+          updateForm={updateForm}
+        />
+        <div className="summary basis-[460px] grow-0">
           <SummaryPanel balance={balance} formData={form} />
           <Warning balance={balance} form={form} />
           <Button

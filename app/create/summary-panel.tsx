@@ -22,6 +22,9 @@ export function SummaryPanel({
     </div>
   );
 
+  const shorttenAddress =
+    formData.recipient.slice(0, 6) + "..." + formData.recipient.slice(-6);
+
   const items = [
     {
       label: "Token",
@@ -37,7 +40,8 @@ export function SummaryPanel({
     },
     {
       label: "Recipient",
-      value: formData.recipient,
+      value: shorttenAddress,
+      caption: formData.recipient,
     },
     {
       label: "End Date",
@@ -49,7 +53,7 @@ export function SummaryPanel({
 
   return (
     <>
-      <div className="border border-border/80 text-white rounded-lg p-6 md:p-10 mx-auto lg:w-full">
+      <div className="border border-border/80 text-white rounded-lg p-6 md:p-10 mx-auto">
         <h3 className="text-3xl font-bold mb-6">Summary</h3>
         <div className="space-y-4">
           {items.map((item) => (
@@ -58,7 +62,12 @@ export function SummaryPanel({
               className="flex justify-between items-center text-foreground/80"
             >
               <div className="">{item.label}</div>
-              <div className="font-semibold text-lg">{item.value}</div>
+              <div
+                className="font-semibold text-lg overflow-hidden text-ellipsis"
+                title={item.caption}
+              >
+                {item.value}
+              </div>
             </div>
           ))}
         </div>

@@ -21,10 +21,12 @@ import { FormDataProps, TokenProps } from "./types";
 import { cn } from "@/utils";
 
 export function CreateForm({
+  className,
   tokens,
   updateForm,
   formData,
 }: {
+  className: string;
   tokens: TokenProps[];
   updateForm: (form: FormDataProps) => void;
   formData: FormDataProps;
@@ -42,7 +44,12 @@ export function CreateForm({
   }, [customPeriod]);
 
   return (
-    <div className="form w-full lg:flex-1 border border-gray-200 rounded-lg p-4 md:p-8 sm:grid sm:grid-cols-2 gap-4 gap-y-8 content-start ">
+    <div
+      className={cn(
+        "form border border-gray-200 rounded-lg p-4 md:p-8 sm:grid sm:grid-cols-2 gap-4 gap-y-8 content-start",
+        className,
+      )}
+    >
       <div className="form-item">
         <Select
           classNames={{

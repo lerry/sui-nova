@@ -113,12 +113,27 @@ function QueryWalletBalance() {
   );
 }
 
-function CreatePoolAndPayStream({ updateSuiCoins }: { updateSuiCoins: (coins: any) => void }) {
+function CreatePoolAndPayStream() {
 
   const my_account = useCurrentAccount();
-  // 获取 SUI coin 对象
-  const mySuiCoins = useSuiClientQuery(
-    'getOwnedObjects',
+  const depositAmount = 2;
+
+  const tx = new Transaction();
+
+  // split coins
+  const [depositCoin] = tx.splitCoins(tx.gas, [MIST_PER_SUI * BigInt(depositAmount)]);
+
+  // Calling smart contract function to create payer pool
+  tx.moveCall({
+    target: `0x8096b927f041dbcb156aa0dfa8e6804fe8c9383d9ed15dee5fae5c2d70cd7dd7::liner_pay::createAndDeposit`,
+    arguments: [
+      depositCoin
+    ],
+  });
+
+  // query payer pool object
+  const payerPoolObj = useSuiClientQuery(
+    'getObject',
     {
       owner: my_account?.address as string,
       filter: {
@@ -138,36 +153,37 @@ function CreatePoolAndPayStream({ updateSuiCoins }: { updateSuiCoins: (coins: an
     },
   );
 
-  // 使用 useEffect 来更新 SUI coins 和打印日志
-  useEffect(() => {
-    if (mySuiCoins.data) {
-      updateSuiCoins(mySuiCoins.data.data);
-      console.log(`sui coins----: ${JSON.stringify(mySuiCoins.data, null, 2)}`);
-    }
-  }, [mySuiCoins.data, updateSuiCoins]);
 
+  execInitializeHouse(
+    {
+      transactionBlock: tx,
+      options: {
+        showObjectChanges: true,
+      },
+    },
+    {
+      onError: (err) => {
+        toast.error(err.message);
+      },
+      onSuccess: (result: SuiTransactionBlockResponse) => {
+        let houseDataObjId;
 
-  // const tx = new Transaction();
+        result.objectChanges?.some((objCh) => {
+          if (
+            objCh.type === "created" &&
+            objCh.objectType === `${PACKAGE_ID}::house_data::HouseData`
+          ) {
+            houseDataObjId = objCh.objectId;
+            return true;
+          }
+        });
 
-  // const tmpCoins = mySuiCoins?.data?.data;
-  // const primaryCoinObj = tx.object(tmpCoins?.[0] as string);
-  // const mergeCoinObjs = tmpCoins?.slice(1) as string[];
+        setHouseDataId(houseDataObjId!);
 
-  // tx.moveCall({
-  //   target:
-  //     "0x2::pay::join_vec",
-  //   arguments: [
-  //     primaryCoinObj,
-  //     // [tx.object("0x1"), tx.object("0x2")],
-  //     tx.pure(bcs.vector(bcs.Address).serialize(mergeCoinObjs))
-  //   ],
-  // });
-
-
-
-
-  // tx.splitCoins(tx.gas, [100, 200]);
-  // tx.moveCall({ target: '0x2::devnet_nft::mint', arguments: [tx.pure.string(name), tx.pure.string(description), tx.pure.string(image)] });
+        toast.success(`Digest: ${result.digest}`);
+      },
+    },
+  );
 
 
   return (

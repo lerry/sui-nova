@@ -1,18 +1,15 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { title } from "@/components/primitives";
 import Image from "next/image";
 import {
-  useSuiClient,
-  useWallets,
-  useSignTransaction,
   useSuiClientQuery,
   useCurrentAccount,
   useSignAndExecuteTransaction,
 } from "@mysten/dapp-kit";
-import { getFaucetHost, requestSuiFromFaucetV0 } from '@mysten/sui/faucet';
 
+// Remove this line
 import "@mysten/dapp-kit/dist/index.css";
 import { Transaction } from "@mysten/sui/transactions";
 import { useState } from "react";
@@ -32,72 +29,7 @@ import { cn } from "@/utils";
 import { now, getLocalTimeZone } from "@internationalized/date";
 import { FixedDatesPicker } from "./fixed-dates-picker";
 import { IconBack } from "@/components/icons";
-import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
-import { bcs } from '@mysten/sui/bcs';
 
-
-function QueryObjectsDemo() {
-  const { data, isPending, error, refetch } = useSuiClientQuery(
-    "getOwnedObjects",
-    {
-      owner:
-        "0xc494732d09de23389dbe99cb2f979965940a633cf50d55caa80ed9e4fc4e521e",
-    },
-  );
-
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
-
-  return <pre>{JSON.stringify(data, null, 2)}</pre>;
-}
-
-function CreatePool() {
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const [digest, setDigest] = useState("");
-  const currentAccount = useCurrentAccount();
-
-  const tx = new Transaction();
-  tx.moveCall({
-    target:
-      "0x8096b927f041dbcb156aa0dfa8e6804fe8c9383d9ed15dee5fae5c2d70cd7dd7::liner_pay::createAndDeposit",
-    arguments: [
-      tx.object(
-        "0x373569027e0fdd0203b22d061307336c3fa7f9b7b0b82225144bbc436c6fa20a",
-      ),
-    ],
-  });
-
-  return (
-    <div style={{ padding: 20 }}>
-      {currentAccount && (
-        <>
-          <div>
-            <Button
-              color="primary"
-              onClick={() => {
-                signAndExecuteTransaction(
-                  {
-                    transaction: tx,
-                  },
-                  {
-                    onSuccess: (result) => {
-                      console.log("executed create pool transaction", result);
-                      setDigest(result.digest);
-                    },
-                  },
-                );
-              }}
-            >
-              Create Pool
-            </Button>
-          </div>
-          <div>Digest: {digest}</div>
-        </>
-      )}
-    </div>
-  );
-}
 
 function QueryWalletBalance() {
   const my_account = useCurrentAccount();
@@ -110,86 +42,6 @@ function QueryWalletBalance() {
 
   return (
       <div>My wallet balance is : {my_balance} SUI.</div>
-  );
-}
-
-function CreatePoolAndPayStream() {
-
-  const my_account = useCurrentAccount();
-  const depositAmount = 2;
-
-  const tx = new Transaction();
-
-  // split coins
-  const [depositCoin] = tx.splitCoins(tx.gas, [MIST_PER_SUI * BigInt(depositAmount)]);
-
-  // Calling smart contract function to create payer pool
-  tx.moveCall({
-    target: `0x8096b927f041dbcb156aa0dfa8e6804fe8c9383d9ed15dee5fae5c2d70cd7dd7::liner_pay::createAndDeposit`,
-    arguments: [
-      depositCoin
-    ],
-  });
-
-  // query payer pool object
-  const payerPoolObj = useSuiClientQuery(
-    'getObject',
-    {
-      owner: my_account?.address as string,
-      filter: {
-        MatchAll: [
-          {
-            StructType: "0x2::coin::Coin<0x2::sui::SUI>",
-          },
-          {
-            AddressOwner: my_account?.address as string,
-          },
-        ],
-      },
-      options: {
-        showOwner: true,
-        showType: true,
-      },
-    },
-  );
-
-
-  execInitializeHouse(
-    {
-      transactionBlock: tx,
-      options: {
-        showObjectChanges: true,
-      },
-    },
-    {
-      onError: (err) => {
-        toast.error(err.message);
-      },
-      onSuccess: (result: SuiTransactionBlockResponse) => {
-        let houseDataObjId;
-
-        result.objectChanges?.some((objCh) => {
-          if (
-            objCh.type === "created" &&
-            objCh.objectType === `${PACKAGE_ID}::house_data::HouseData`
-          ) {
-            houseDataObjId = objCh.objectId;
-            return true;
-          }
-        });
-
-        setHouseDataId(houseDataObjId!);
-
-        toast.success(`Digest: ${result.digest}`);
-      },
-    },
-  );
-
-
-  return (
-    <div>
-        <pre>{JSON.stringify(mySuiCoins?.data, null, 2)}</pre>
-    </div>
   );
 }
 
@@ -219,57 +71,59 @@ export default function CreatePage() {
   const [showFixed, setShowFixed] = useState(true);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [customPeriod, setCustomPeriod] = useState({ years: 0, days: 0 });
-  const [suiCoins, setSuiCoins] = useState([]);
 
 
+  async function CreatePoolAndPayStream() {
 
-  const updateSuiCoins = useCallback((coins: any) => {
-    setSuiCoins(coins);
-  }, []);
+    const { mutate: execInitializePoolAndStream } =useSignAndExecuteTransaction();
 
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const { mutateAsync: signTransaction } = useSignTransaction();
-  const client = useSuiClient();
-  const currentAccount = useCurrentAccount();
-  async function handleCreate() {
-    // await requestSuiFromFaucetV0({
-    //   host: getFaucetHost('testnet'),
-    //   recipient: '0xfe951e8cb178e2f2653258a280e8f53e88cc0066b924bf2f35c32f6e4cadb6f9'
-    // });
-
-    const mySuiCoinIds = suiCoins?.map((item: any) => item?.data?.objectId).filter(Boolean) ?? [];
-
-    if (mySuiCoinIds.length === 0) {
-      console.error('没有可用的 SUI 币');
-      return;
-    }
+    const depositAmount = 2;
+    const recipient = "0x123";
+    const amountPerSec = 1;
 
     const tx = new Transaction();
-    tx.mergeCoins(mySuiCoinIds[0], mySuiCoinIds.slice(1));
-    console.log(mySuiCoinIds[0]);
-    console.log(mySuiCoinIds.slice(1));
-    console.log(tx);
 
-    tx.splitCoins(tx.gas, [100]);
+    // split coins
+    const [depositCoin] = tx.splitCoins(tx.gas, [MIST_PER_SUI * BigInt(depositAmount)]);
 
-    console.log(`tx: ${JSON.stringify(tx, null, 2)}`);
-    signAndExecuteTransaction(
-      {
-        transaction: tx,
-      }, {
-      onSuccess: (result) => {
-          console.log('executed create pool transaction', result);
-
-      },
+    // Calling smart contract function to create payer pool
+    const [payerPoolId] = tx.moveCall({
+      target: `0x8096b927f041dbcb156aa0dfa8e6804fe8c9383d9ed15dee5fae5c2d70cd7dd7::liner_pay::createAndDeposit`,
+      arguments: [
+        depositCoin
+      ],
     });
 
+    // Calling smart contract function to create stream
+    const [recivierCardId] = tx.moveCall({
+      target: `0x8096b927f041dbcb156aa0dfa8e6804fe8c9383d9ed15dee5fae5c2d70cd7dd7::liner_pay::createStream`,
+      arguments: [
+        tx.object(payerPoolId),
+        tx.object(recipient),
+        tx.pure.option('u8', amountPerSec),
+      ],
+    });
 
-    console.log(`交易: ${JSON.stringify(tx, null, 2)}`);
-
+    execInitializePoolAndStream(
+      {
+        transaction: tx,
+        // options: {
+        //   showObjectChanges: true,
+        // },
+      },
+      {
+        onError: (err: Error) => {
+          console.error(err.message);
+        },
+        onSuccess: (result) => {
+          console.log("executed create pool and stream transaction", result);
+        },
+      },
+    );
   }
+
   return (
     <section className="flex flex-col  gap-4 py-8 md:py-10">
-      <CreatePoolAndPayStream updateSuiCoins={updateSuiCoins} />
       <div className="flex items-center pb-8">
         <IconBack
           className="border border-white rounded-full mr-4"
@@ -446,7 +300,7 @@ export default function CreatePage() {
           <div className="show-summary border border-gray-200 rounded-lg p-4 md:p-8">
             <div className="flex flex-col gap-4"></div>
           </div>
-          <Button className="w-full mt-4" color="primary" size="lg" onClick={handleCreate}>
+          <Button className="w-full mt-4" color="primary" size="lg" onClick={CreatePoolAndPayStream}>
             Create
           </Button>
         </div>

@@ -293,7 +293,7 @@ export default function CreatePage() {
       <div className="panel flex flex-col lg:flex-row gap-8">
         <CreateForm formData={form} tokens={tokens} updateForm={updateForm} />
 
-        <div className="summary basis-[460px] ">
+        <div className="summary basis-[460px]">
           <SummaryPanel balance={balance} formData={form} />
 
           <Warning balance={balance} form={form} />

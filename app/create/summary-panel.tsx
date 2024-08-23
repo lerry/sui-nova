@@ -49,12 +49,15 @@ export function SummaryPanel({
 
   return (
     <>
-      <div className=" border border-border/80 text-white rounded-lg p-6 md:p-10 max-w-md mx-auto">
+      <div className="border border-border/80 text-white rounded-lg p-6 md:p-10 mx-auto lg:w-full">
         <h3 className="text-3xl font-bold mb-6">Summary</h3>
         <div className="space-y-4">
           {items.map((item) => (
-            <div key={item.label} className="flex justify-between items-center">
-              <div className="text-gray-400">{item.label}</div>
+            <div
+              key={item.label}
+              className="flex justify-between items-center text-foreground/80"
+            >
+              <div className="">{item.label}</div>
               <div className="font-semibold text-lg">{item.value}</div>
             </div>
           ))}

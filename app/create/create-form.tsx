@@ -42,7 +42,7 @@ export function CreateForm({
   }, [customPeriod]);
 
   return (
-    <div className="form flex-1 border border-gray-200 rounded-lg p-4 md:p-8 sm:grid sm:grid-cols-2 gap-4">
+    <div className="form w-full lg:flex-1 border border-gray-200 rounded-lg p-4 md:p-8 sm:grid sm:grid-cols-2 gap-4 gap-y-8 content-start ">
       <div className="form-item">
         <Select
           classNames={{

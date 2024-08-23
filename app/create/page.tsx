@@ -290,12 +290,10 @@ export default function CreatePage() {
         <h2 className={cn(title(), "!text-3xl")}>Create Stream</h2>
         {/* <QueryObjects /> */}
       </div>
-      <div className="panel flex flex-col lg:flex-row gap-8">
+      <div className="panel flex flex-col lg:flex-row gap-4 lg:gap-8 items-start">
         <CreateForm formData={form} tokens={tokens} updateForm={updateForm} />
-
-        <div className="summary basis-[460px]">
+        <div className="summary w-full lg:basis-[460px] ">
           <SummaryPanel balance={balance} formData={form} />
-
           <Warning balance={balance} form={form} />
           <Button
             className="w-full mt-4"

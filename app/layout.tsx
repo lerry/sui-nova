@@ -1,7 +1,6 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import "@mysten/dapp-kit/dist/index.css";
-import { Link } from "@nextui-org/link";
 import clsx from "clsx";
 
 import { Providers } from "./providers";

@@ -55,8 +55,9 @@ export function FixedDatesPicker({
     setCustomPeriod(_peroid);
     onOpenChange();
   }
+
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl">
+    <Modal isOpen={isOpen} size="2xl" onOpenChange={onOpenChange}>
       {" "}
       <ModalContent>
         <ModalHeader>Fixed dates</ModalHeader>
@@ -67,12 +68,12 @@ export function FixedDatesPicker({
               {preDefinedDates.map((date, index) => (
                 <Button
                   key={index}
-                  onClick={() => handleChoosePeriod(date)}
                   color={
                     _peroid.years === date.years && _peroid.days === date.days
                       ? "primary"
                       : "default"
                   }
+                  onClick={() => handleChoosePeriod(date)}
                 >
                   {date.years > 0
                     ? `${date.years} ${date.years > 1 ? "years" : "year"}`
@@ -86,9 +87,9 @@ export function FixedDatesPicker({
             <h2 className="">Custom period</h2>
             <div className="flex gap-2">
               <Input
-                type="number"
                 label="Years"
                 placeholder="Years"
+                type="number"
                 value={_peroid.years.toString()}
                 onValueChange={(value) =>
                   setPeriod({
@@ -98,9 +99,9 @@ export function FixedDatesPicker({
                 }
               />
               <Input
-                type="number"
                 label="Days"
                 placeholder="Days"
+                type="number"
                 value={_peroid.days.toString()}
                 onValueChange={(value) =>
                   setPeriod({
@@ -111,8 +112,8 @@ export function FixedDatesPicker({
               />
             </div>
             <Button
-              color="primary"
               className="text-medium"
+              color="primary"
               onClick={() => handleSetPeriod()}
             >
               Set

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCurrentAccount } from "@mysten/dapp-kit";
+
 import { OwnedObjects } from "@/components/OwnedObjects";
 
 export function WalletStatus() {

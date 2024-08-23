@@ -1,4 +1,3 @@
-
 import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
 
 export function OwnedObjects() {
@@ -26,7 +25,7 @@ export function OwnedObjects() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', margin: '8px 0' }}>
+    <div style={{ display: "flex", flexDirection: "column", margin: "8px 0" }}>
       {data.data.length === 0 ? (
         <div>连接的钱包没有拥有任何对象</div>
       ) : (

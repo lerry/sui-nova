@@ -1,7 +1,5 @@
 "use client";
 import { useState } from "react";
-import { title } from "@/components/primitives";
-import { cn } from "@/utils";
 import { Tabs, Tab } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
 import { Link } from "@nextui-org/react";
@@ -12,7 +10,6 @@ import {
   DropdownItem,
   Button,
 } from "@nextui-org/react";
-
 import { Breadcrumbs, BreadcrumbItem } from "@nextui-org/react";
 import React from "react";
 import {
@@ -23,6 +20,9 @@ import {
   TableRow,
   TableCell,
 } from "@nextui-org/react";
+
+import { cn } from "@/utils";
+import { title } from "@/components/primitives";
 import { IconMoreVertical } from "@/components/icons";
 function BreadcrumbsComponent() {
   return (
@@ -123,14 +123,15 @@ const fakeStreams = [
 
 function StreamActions({ stream }: { stream: (typeof fakeStreams)[0] }) {
   const [isOpen, setIsOpen] = useState(false);
+
   return (
     <Dropdown isOpen={isOpen}>
       <DropdownTrigger>
         <Button
           isIconOnly
+          aria-label="More"
           size="sm"
           variant="bordered"
-          aria-label="More"
           onMouseEnter={() => setIsOpen(true)}
           onMouseLeave={() => setIsOpen(false)}
         >
@@ -151,6 +152,7 @@ export default function AppPage() {
   const handleSelectionChange = (key: any) => {
     router.push(`/app?type=${key}`);
   };
+
   return (
     <section className="flex flex-col gap-4">
       {/* <BreadcrumbsComponent /> */}
@@ -159,15 +161,15 @@ export default function AppPage() {
         <Tabs
           aria-label="Options"
           color="primary"
-          variant="bordered"
           size="lg"
+          variant="bordered"
           onSelectionChange={handleSelectionChange}
         >
           {tabs.map((tab) => (
             <Tab key={tab.value} title={tab.label} />
           ))}
         </Tabs>
-        <Button color="primary" size="lg" as={Link} href="/create">
+        <Button as={Link} color="primary" href="/create" size="lg">
           Create Stream
         </Button>
       </div>

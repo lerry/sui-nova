@@ -10,31 +10,25 @@ import {
   NavbarItem,
   NavbarMenuItem,
 } from "@nextui-org/react";
-
 import { Link } from "@nextui-org/link";
 import { link as linkStyles } from "@nextui-org/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
+import { ConnectButton } from "@mysten/dapp-kit";
 
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
-import {
-  TwitterIcon,
-  GithubIcon,
-  DiscordIcon,
-  HeartFilledIcon,
-  Logo,
-} from "@/components/icons";
-import { ConnectButton } from "@mysten/dapp-kit";
+import { GithubIcon, Logo } from "@/components/icons";
 
 export const Navbar = () => {
   const pathname = usePathname();
+
   return (
     <NextUINavbar
+      isBordered
+      className="h-16 sm:h-20"
       maxWidth="xl"
       position="sticky"
-      className="h-16 sm:h-20"
-      isBordered
     >
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
         <NavbarBrand as="li" className="gap-3 max-w-fit">
@@ -71,7 +65,9 @@ export const Navbar = () => {
           </Link>
           <ThemeSwitch />
         </NavbarItem>
-        {pathname !== "/" && <ConnectButton className="hidden sm:flex bg-primary" />}
+        {pathname !== "/" && (
+          <ConnectButton className="hidden sm:flex bg-primary" />
+        )}
       </NavbarContent>
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">

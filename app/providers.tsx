@@ -5,9 +5,9 @@ import { NextUIProvider } from "@nextui-org/system";
 import { useRouter } from "next/navigation";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { ThemeProviderProps } from "next-themes/dist/types";
-
 import { SuiClientProvider, WalletProvider } from "@mysten/dapp-kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import { networkConfig } from "./networkConfig";
 const queryClient = new QueryClient();
 
@@ -23,7 +23,7 @@ export function Providers({ children, themeProps }: ProvidersProps) {
     <NextUIProvider navigate={router.push}>
       <NextThemesProvider {...themeProps}>
         <QueryClientProvider client={queryClient}>
-          <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
+          <SuiClientProvider defaultNetwork="testnet" networks={networkConfig}>
             <WalletProvider autoConnect>{children}</WalletProvider>
           </SuiClientProvider>
         </QueryClientProvider>

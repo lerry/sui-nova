@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { title } from "@/components/primitives";
 import Image from "next/image";
 import {
@@ -21,7 +20,6 @@ import {
   Switch,
   DatePicker,
   useDisclosure,
-  MenuItem,
 } from "@nextui-org/react";
 import React from "react";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
@@ -29,7 +27,6 @@ import { cn } from "@/utils";
 import { now, getLocalTimeZone } from "@internationalized/date";
 import { FixedDatesPicker } from "./fixed-dates-picker";
 import { IconBack } from "@/components/icons";
-
 
 function QueryWalletBalance() {
   const my_account = useCurrentAccount();
@@ -63,7 +60,8 @@ const coins: { label: string; value: string }[] = [
 export default function CreatePage() {
   const [form, setForm] = useState({
     token: coins[0].value,
-    amount: 100,
+    poolAmount: 1,
+    amountPerSec: 0.001,
     recipient: "0x999666",
     duration: 1000,
     cancelable: true,
@@ -71,52 +69,37 @@ export default function CreatePage() {
   const [showFixed, setShowFixed] = useState(true);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [customPeriod, setCustomPeriod] = useState({ years: 0, days: 0 });
-
+  const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+  const [txDigest, setDigest] = useState("");
 
   async function CreatePoolAndPayStream() {
-
-    const { mutate: signAndExecute } =useSignAndExecuteTransaction();
-
-    const depositAmount = 2;
-    const recipient = "0x123";
-    const amountPerSec = 1;
-
     const tx = new Transaction();
 
     // 1.split coins
-    const [depositCoin] = tx.splitCoins(tx.gas, [MIST_PER_SUI * BigInt(depositAmount)]);
+    const [depositCoin] = tx.splitCoins(tx.gas, [10**9 * form.poolAmount]);
 
-    // 2.Calling smart contract function to create payer pool
-    const [payerPoolAddr] = tx.moveCall({
-      target: `0x29379cc662cd00266b9bb87db9cadfdafd1bd5215bc4b3dc9779653a66e01a0e::liner_pay::createAndDeposit`,
+    // 2.Calling smart contract function to create payer pool and stream
+    tx.moveCall({
+      target: `0xa60804309db3c87d785ecee5fcdab72aacc13aa567275e2b4d54f5bbf15f525d::liner_pay::createPayPoolAndStream`,
       arguments: [
-        depositCoin
-      ],
-    });
-
-    // 3.Calling smart contract function to create stream
-    const [recivierCardId] = tx.moveCall({
-      target: `0x29379cc662cd00266b9bb87db9cadfdafd1bd5215bc4b3dc9779653a66e01a0e::liner_pay::createStream`,
-      arguments: [
-        tx.object(payerPoolAddr),
-        tx.object(recipient),
-        tx.pure.option('u8', amountPerSec),
+        depositCoin,
+        tx.pure.vector('address', [form.recipient]),
+        tx.pure.vector('u64', [10**9 * form.amountPerSec]),
+        tx.object('0x6'),
       ],
     });
 
     signAndExecute(
       {
         transaction: tx,
-        // options: {
-        //   showObjectChanges: true,
-        // },
       },
       {
         onError: (err: Error) => {
           console.error(err.message);
         },
         onSuccess: (result) => {
-          console.log("executed create pool and stream transaction", result);
+          console.log("successed create pool and stream, digest :", result.digest);
+          setDigest(result.digest);
         },
       },
     );
@@ -215,14 +198,14 @@ export default function CreatePage() {
           </div>
           <div className="form-item">
             <Input
-              label="Amount"
-              placeholder="Fill in the amount"
+              label="AmountPerSecond"
+              placeholder="Fill in the amount per second"
               type="number"
               size="lg"
               labelPlacement="outside"
-              value={form.amount.toString()}
+              value={form.amountPerSec.toString()}
               onValueChange={(value) => {
-                setForm({ ...form, amount: Number(value) });
+                setForm({ ...form, amountPerSec: Number(value) });
               }}
               classNames={{
                 base: "max-w-xs",
@@ -298,11 +281,27 @@ export default function CreatePage() {
         </div>
         <div className="summary basis-[460px] ">
           <div className="show-summary border border-gray-200 rounded-lg p-4 md:p-8">
-            <div className="flex flex-col gap-4"></div>
+            <div className="flex flex-col gap-4">
+            <Input
+              label="PoolAmount"
+              placeholder="Fill in the pool amount"
+              type="number"
+              size="lg"
+              labelPlacement="outside"
+              value={form.poolAmount.toString()}
+              onValueChange={(value) => {
+                setForm({ ...form, poolAmount: Number(value) });
+              }}
+              classNames={{
+                base: "max-w-xs",
+              }}
+              />
+            </div>
           </div>
           <Button className="w-full mt-4" color="primary" size="lg" onClick={CreatePoolAndPayStream}>
             Create
           </Button>
+          <div>https://suiscan.xyz/testnet/tx/{txDigest}</div>
         </div>
       </div>
     </section>

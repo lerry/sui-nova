@@ -156,7 +156,7 @@ export default function AppPage() {
   return (
     <section className="flex flex-col gap-4">
       <h1 className={cn(title(), "!text-2xl py-6")}>All Streams</h1>
-      <div className="flex justify-between">
+      <div className="flex justify-between min-w-md overflow-x-auto   flex-col-reverse lg:flex-row">
         <Tabs
           aria-label="Options"
           color="primary"
@@ -168,12 +168,18 @@ export default function AppPage() {
             <Tab key={tab.value} title={tab.label} />
           ))}
         </Tabs>
-        <Button as={Link} color="primary" href="/create" size="lg">
+        <Button
+          as={Link}
+          color="primary"
+          href="/create"
+          size="lg"
+          className="lg:mt-0 mb-4"
+        >
           Create Stream
         </Button>
       </div>
 
-      <Table aria-label="Example static collection table">
+      <Table aria-label="Example static collection table min-w-md overflow-x-auto">
         <TableHeader>
           {tableColumns.map((column) => (
             <TableColumn key={column.key}>{column.label}</TableColumn>

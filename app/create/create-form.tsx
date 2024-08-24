@@ -45,14 +45,14 @@ export function CreateForm({
   return (
     <div
       className={cn(
-        "form border border-gray-200 rounded-lg p-4 md:p-8 sm:grid sm:grid-cols-2 gap-4 gap-y-8 content-start",
+        " form border border-gray-200 rounded-lg p-4 md:p-8 grid grid-cols-1 md:grid-cols-2  gap-4 gap-y-8 content-start",
         className,
       )}
     >
       <div className="form-item">
         <Select
           classNames={{
-            base: "max-w-xs",
+            base: "w-full",
             trigger: "h-12",
           }}
           items={tokens}
@@ -104,7 +104,7 @@ export function CreateForm({
         <Switch
           classNames={{
             base: cn(
-              "inline-flex flex-row-reverse w-full max-w-sm hover:bg-content2 items-center",
+              "inline-flex flex-row-reverse w-full max-w-sm hover:bg-content2 items-center w-full",
               "justify-between cursor-pointer rounded-lg gap-2 p-4 border-2",
               "data-[selected=true]:border-primary border-default-200 h-12 rounded-large",
             ),
@@ -132,7 +132,7 @@ export function CreateForm({
       <div className="form-item">
         <Input
           classNames={{
-            base: "max-w-xs",
+            base: "w-full",
           }}
           label="Amount"
           labelPlacement="outside"
@@ -149,7 +149,7 @@ export function CreateForm({
       <div className="form-item">
         <Input
           classNames={{
-            base: "max-w-xs",
+            base: "w-full",
           }}
           label="Recipient"
           labelPlacement="outside"
@@ -163,24 +163,18 @@ export function CreateForm({
           }}
         />
       </div>
-      <div className="form-item col-span-2 grid grid-cols-5 gap-4 items-center">
-        {showFixed && (
-          <>
-            <div className="col-span-5">
-              <Button className="w-full" size="lg" onClick={onOpenChange}>
-                {customPeriod.years > 0 || customPeriod.days > 0
-                  ? `Duration: ${customPeriod.years > 0 ? `${customPeriod.years} ${customPeriod.years > 1 ? "years" : "year"}` : ""} ${customPeriod.days > 0 ? `${customPeriod.days} ${customPeriod.days > 1 ? "days" : "day"}` : ""}`
-                  : "Choose Duration"}
-              </Button>
-              <FixedDatesPicker
-                customPeriod={customPeriod}
-                isOpen={isOpen}
-                setCustomPeriod={setCustomPeriod}
-                onOpenChange={onOpenChange}
-              />
-            </div>
-          </>
-        )}
+      <div className="form-item col-span-1 md:col-span-2 gap-4 items-center">
+        <Button className="w-full" size="lg" onClick={onOpenChange}>
+          {customPeriod.years > 0 || customPeriod.days > 0
+            ? `Duration: ${customPeriod.years > 0 ? `${customPeriod.years} ${customPeriod.years > 1 ? "years" : "year"}` : ""} ${customPeriod.days > 0 ? `${customPeriod.days} ${customPeriod.days > 1 ? "days" : "day"}` : ""}`
+            : "Choose Duration"}
+        </Button>
+        <FixedDatesPicker
+          customPeriod={customPeriod}
+          isOpen={isOpen}
+          setCustomPeriod={setCustomPeriod}
+          onOpenChange={onOpenChange}
+        />
         {/* {!showFixed && (
           <>
             <DatePicker

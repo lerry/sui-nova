@@ -1,4 +1,3 @@
-import Image from "next/image";
 import dayjs from "dayjs";
 
 import { FormDataProps } from "./types";
@@ -12,11 +11,10 @@ export function SummaryPanel({
 }) {
   const tokenItem = (
     <div className="flex items-center gap-1">
-      <Image
+      <img
         alt="Token"
-        height={20}
+        className="h-5 w-auto"
         src={`/tokens/${formData.token.symbol}.svg`}
-        width={20}
       />
       {formData.token.symbol}
     </div>

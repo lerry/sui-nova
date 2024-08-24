@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import Image from "next/image";
 
 import "@mysten/dapp-kit/dist/index.css";
 import { useState } from "react";
@@ -85,12 +84,10 @@ export function CreateForm({
           {(token: TokenProps) => (
             <SelectItem key={token.symbol} textValue={token.symbol}>
               <div className="flex gap-2 items-center">
-                <Image
+                <img
                   alt={token.symbol}
-                  className="flex-shrink-0"
-                  height={24}
+                  className="h-5 w-auto"
                   src={`/tokens/${token.symbol}.svg`}
-                  width={24}
                 />
                 <div className="flex flex-col">
                   <span className="text-small">{token.symbol}</span>

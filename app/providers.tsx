@@ -23,7 +23,7 @@ export function Providers({ children, themeProps }: ProvidersProps) {
     <NextUIProvider navigate={router.push}>
       <NextThemesProvider {...themeProps}>
         <QueryClientProvider client={queryClient}>
-          <SuiClientProvider defaultNetwork="testnet" networks={networkConfig}>
+          <SuiClientProvider defaultNetwork="mainnet" networks={networkConfig}>
             <WalletProvider autoConnect>{children}</WalletProvider>
           </SuiClientProvider>
         </QueryClientProvider>

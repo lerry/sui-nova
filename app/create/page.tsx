@@ -8,6 +8,7 @@ import {
   useSignAndExecuteTransaction,
 } from "@mysten/dapp-kit";
 
+import Link from "next/link";
 import "@mysten/dapp-kit/dist/index.css";
 import { Transaction } from "@mysten/sui/transactions";
 import { Button, useDisclosure } from "@nextui-org/react";
@@ -39,9 +40,6 @@ export default function CreatePage() {
   const [balance, setBalance] = useState(0);
   const currentAccount = useCurrentAccount();
   const { data: balanceData } = useSuiClientQuery("getAllBalances", {
-    owner: currentAccount?.address as string,
-  });
-  const { data: coinData } = useSuiClientQuery("getAllCoins", {
     owner: currentAccount?.address as string,
   });
 
@@ -139,12 +137,14 @@ export default function CreatePage() {
         txDigest={txDigest}
       />
       <div className="flex items-center pb-8">
-        <IconBack
-          className="border border-white rounded-full mr-4"
-          color="white"
-          height={35}
-          width={35}
-        />
+        <Link href="/app">
+          <IconBack
+            className="border border-white rounded-full mr-4 cursor-pointer"
+            color="white"
+            height={35}
+            width={35}
+          />
+        </Link>
         <h2 className={cn(title(), "!text-3xl")}>Create Stream</h2>
       </div>
       <div className="panel  flex flex-col lg:flex-row gap-4 lg:gap-8 ">
@@ -164,7 +164,8 @@ export default function CreatePage() {
               !currentWallet ||
               connectionStatus !== "connected" ||
               balance < form.amount ||
-              !form.duration
+              !form.duration ||
+              !form.recipient
             }
             size="lg"
             onClick={CreatePoolAndPayStream}

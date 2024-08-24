@@ -72,7 +72,7 @@ export default function CreatePage() {
         setBalance(0);
       }
     }
-  }, [balanceData, form.token]);
+  }, [balanceData]);
 
   // useEffect(() => {
   //   onOpen();
@@ -144,7 +144,7 @@ export default function CreatePage() {
             width={35}
           />
         </Link>
-        <h2 className={cn(title(), "!text-3xl")}>Create Stream</h2>
+        <h2 className={cn(title(), "!text-2xl")}>Create Stream</h2>
       </div>
       <div className="panel  flex flex-col lg:flex-row gap-4 lg:gap-8 ">
         <CreateForm

@@ -27,7 +27,7 @@ export function Warning({
     } else {
       setWarningText("");
     }
-  }, [isConnected, balance, form]);
+  }, [isConnected, balance, form.amount, form.recipient, form.duration]);
 
   return (
     (warningText && (

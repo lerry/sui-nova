@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Tabs, Tab } from "@nextui-org/react";
+import { Tabs, Tab, CircularProgress } from "@nextui-org/react";
+
 import { useRouter } from "next/navigation";
 import { Link } from "@nextui-org/react";
 import {
@@ -64,10 +65,10 @@ const tableColumns = [
     label: "Created At",
     key: "created_at",
   },
-  {
-    label: "Ends At",
-    key: "ends_at",
-  },
+  // {
+  //   label: "Ends At",
+  //   key: "ends_at",
+  // },
   {
     label: "Progress",
     key: "progress",
@@ -81,43 +82,43 @@ const tableColumns = [
 const fakeStreams = [
   {
     id: "1",
-    from: "0x123",
+    from: "0x123e...789d",
     to: "0x456",
     amount: "100",
     status: "active",
-    createdAt: "2021-01-01",
-    endsAt: "2021-01-02",
-    progress: "0%",
+    createdAt: "2024-08-01",
+    endsAt: "2024-08-02",
+    progress: "3%",
   },
   {
     id: "2",
-    from: "0x789",
-    to: "0x012",
+    from: "0x7dce...186c",
+    to: "0x01c2",
     amount: "200",
     status: "active",
-    createdAt: "2021-01-01",
-    endsAt: "2021-01-02",
-    progress: "0%",
+    createdAt: "2024-08-16",
+    endsAt: "2024-08-02",
+    progress: "30%",
   },
   {
     id: "3",
-    from: "0x345",
-    to: "0x678",
+    from: "0x3f5c...186c",
+    to: "0x67c8",
     amount: "300",
     status: "active",
-    createdAt: "2021-01-01",
-    endsAt: "2021-01-02",
-    progress: "0%",
+    createdAt: "2024-08-20",
+    endsAt: "2024-09-20",
+    progress: "50%",
   },
   {
     id: "4",
-    from: "0x901",
+    from: "0xc01cf...234d",
     to: "0x234",
     amount: "400",
-    status: "active",
-    createdAt: "2021-01-01",
-    endsAt: "2021-01-02",
-    progress: "0%",
+    status: "completed",
+    createdAt: "2024-08-01",
+    endsAt: "2024-08-02",
+    progress: "100%",
   },
 ];
 
@@ -135,13 +136,12 @@ function StreamActions({ stream }: { stream: (typeof fakeStreams)[0] }) {
           onMouseEnter={() => setIsOpen(true)}
           onMouseLeave={() => setIsOpen(false)}
         >
-          <IconMoreVertical />
+          <IconMoreVertical height={18} />
         </Button>
       </DropdownTrigger>
       <DropdownMenu aria-label="Static Actions">
-        <DropdownItem key="new">New file</DropdownItem>
-        <DropdownItem key="copy">Copy link</DropdownItem>
-        <DropdownItem key="edit">Edit file</DropdownItem>
+        <DropdownItem key="new">Cancel </DropdownItem>
+        <DropdownItem key="copy">Copy Stream</DropdownItem>
       </DropdownMenu>
     </Dropdown>
   );
@@ -155,7 +155,6 @@ export default function AppPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      {/* <BreadcrumbsComponent /> */}
       <h1 className={cn(title(), "!text-2xl py-6")}>All Streams</h1>
       <div className="flex justify-between">
         <Tabs
@@ -181,19 +180,48 @@ export default function AppPage() {
           ))}
         </TableHeader>
         <TableBody>
-          {fakeStreams.map((stream) => (
-            <TableRow key={stream.id}>
-              <TableCell>{stream.from}</TableCell>
-              <TableCell>{stream.amount}</TableCell>
-              <TableCell>{stream.status}</TableCell>
-              <TableCell>{stream.createdAt}</TableCell>
-              <TableCell>{stream.endsAt}</TableCell>
-              <TableCell>{stream.progress}</TableCell>
-              <TableCell>
-                <StreamActions stream={stream} />
-              </TableCell>
-            </TableRow>
-          ))}
+          {fakeStreams
+            .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+            .map((stream) => (
+              <TableRow
+                key={stream.id}
+                className="hover:bg-background/50 cursor-pointer"
+                onClick={() =>
+                  router.push(
+                    `/stream/$9DeT6dQNq438uQZbFYGtT93HRzFjK4bWN3WvHX9iVqWM`,
+                  )
+                }
+              >
+                <TableCell>{stream.from}</TableCell>
+                <TableCell>{stream.amount}</TableCell>
+                <TableCell>
+                  <span
+                    className={cn(
+                      "px-2 py-1 rounded-md font-medium text-sm",
+                      stream.status === "completed"
+                        ? "bg-gray-500 "
+                        : "bg-green-500",
+                    )}
+                  >
+                    {stream.status.toUpperCase()}
+                  </span>
+                </TableCell>
+                <TableCell>{stream.createdAt}</TableCell>
+                {/* <TableCell>{stream.endsAt}</TableCell> */}
+                <TableCell>
+                  <CircularProgress
+                    value={parseInt(stream.progress)}
+                    size="lg"
+                    color="primary"
+                    aria-label="Loading..."
+                    showValueLabel={true}
+                  />
+                </TableCell>
+                <TableCell>
+                  <StreamActions stream={stream} />
+                </TableCell>
+              </TableRow>
+            ))}
         </TableBody>
       </Table>
     </section>

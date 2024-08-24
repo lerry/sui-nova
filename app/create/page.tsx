@@ -80,7 +80,7 @@ export default function CreatePage() {
 
     // 2.Calling smart contract function to create payer pool and stream
     tx.moveCall({
-      target: `0xa60804309db3c87d785ecee5fcdab72aacc13aa567275e2b4d54f5bbf15f525d::liner_pay::createPayPoolAndStream`,
+      target: `0xa769a20c9b8e80078bdad52ce1a2ecc4fb0d7c8df815e3b089bb6893913042e5::liner_pay::createPayPoolAndStream`,
       arguments: [
         depositCoin,
         tx.pure.vector('address', [form.recipient]),

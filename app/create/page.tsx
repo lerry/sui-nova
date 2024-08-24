@@ -16,7 +16,7 @@ import { Button, useDisclosure } from "@nextui-org/react";
 import { IconBack } from "@/components/icons";
 import { title } from "@/components/primitives";
 import { FormDataProps, TokenProps } from "./types";
-import { cn } from "@/utils";
+import { cn, checkSuiAddress } from "@/utils";
 import { CreateForm } from "./create-form";
 import { SummaryPanel } from "./summary-panel";
 import { Warning } from "./Warning";
@@ -45,10 +45,9 @@ export default function CreatePage() {
 
   const [form, setForm] = useState<FormDataProps>({
     token: tokens[0],
-    amount: 1,
+    amount: 0,
     cancelable: true,
-    recipient:
-      "0x7f5f79103d86d9c5c4436e199e3db4dc0dc5103d403e5e44cdeefc2f9324fe1d",
+    recipient: "",
     duration: 0,
   });
 
@@ -165,7 +164,7 @@ export default function CreatePage() {
               connectionStatus !== "connected" ||
               balance < form.amount ||
               !form.duration ||
-              !form.recipient
+              !checkSuiAddress(form.recipient)
             }
             size="lg"
             onClick={CreatePoolAndPayStream}

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useCurrentWallet } from "@mysten/dapp-kit";
 
 import { FormDataProps } from "./types";
-
+import { checkSuiAddress } from "@/utils";
 export function Warning({
   balance,
   form,
@@ -16,18 +16,18 @@ export function Warning({
   useEffect(() => {
     if (!isConnected) {
       setWarningText("Please connect your wallet to continue");
-    } else if (balance < form.amount) {
-      setWarningText("Insufficient balance");
-    } else if (!form.duration) {
-      setWarningText("Please select a duration");
-    } else if (!form.recipient) {
-      setWarningText("Please input a recipient");
     } else if (!form.amount) {
       setWarningText("Please input the amount");
+    } else if (balance < form.amount) {
+      setWarningText("Insufficient balance");
+    } else if (!checkSuiAddress(form.recipient)) {
+      setWarningText("Please input a valid recipient address");
+    } else if (!form.duration) {
+      setWarningText("Please select a duration");
     } else {
       setWarningText("");
     }
-  }, [isConnected, balance, form.amount, form.duration]);
+  }, [isConnected, balance, form]);
 
   return (
     (warningText && (

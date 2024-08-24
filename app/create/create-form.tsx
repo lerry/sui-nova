@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Metadata } from "next";
 
 import "@mysten/dapp-kit/dist/index.css";
 import { useState } from "react";
@@ -16,8 +17,11 @@ import React from "react";
 
 import { FixedDatesPicker } from "./fixed-dates-picker";
 import { FormDataProps, TokenProps } from "./types";
-
 import { cn } from "@/utils";
+
+export const metadata: Metadata = {
+  title: "Create Stream",
+};
 
 export function CreateForm({
   className,

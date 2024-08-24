@@ -1,18 +1,14 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
 import { title } from "@/components/primitives";
 import Image from "next/image";
 import {
-  useSuiClient,
-  useWallets,
-  useSignTransaction,
   useSuiClientQuery,
   useCurrentAccount,
   useSignAndExecuteTransaction,
 } from "@mysten/dapp-kit";
-import { getFaucetHost, requestSuiFromFaucetV0 } from '@mysten/sui/faucet';
 
+// Remove this line
 import "@mysten/dapp-kit/dist/index.css";
 import { Transaction } from "@mysten/sui/transactions";
 import { useState } from "react";
@@ -24,7 +20,6 @@ import {
   Switch,
   DatePicker,
   useDisclosure,
-  MenuItem,
 } from "@nextui-org/react";
 import React from "react";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
@@ -32,72 +27,6 @@ import { cn } from "@/utils";
 import { now, getLocalTimeZone } from "@internationalized/date";
 import { FixedDatesPicker } from "./fixed-dates-picker";
 import { IconBack } from "@/components/icons";
-import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
-import { bcs } from '@mysten/sui/bcs';
-
-
-function QueryObjectsDemo() {
-  const { data, isPending, error, refetch } = useSuiClientQuery(
-    "getOwnedObjects",
-    {
-      owner:
-        "0xc494732d09de23389dbe99cb2f979965940a633cf50d55caa80ed9e4fc4e521e",
-    },
-  );
-
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
-
-  return <pre>{JSON.stringify(data, null, 2)}</pre>;
-}
-
-function CreatePool() {
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const [digest, setDigest] = useState("");
-  const currentAccount = useCurrentAccount();
-
-  const tx = new Transaction();
-  tx.moveCall({
-    target:
-      "0x8096b927f041dbcb156aa0dfa8e6804fe8c9383d9ed15dee5fae5c2d70cd7dd7::liner_pay::createAndDeposit",
-    arguments: [
-      tx.object(
-        "0x373569027e0fdd0203b22d061307336c3fa7f9b7b0b82225144bbc436c6fa20a",
-      ),
-    ],
-  });
-
-  return (
-    <div style={{ padding: 20 }}>
-      {currentAccount && (
-        <>
-          <div>
-            <Button
-              color="primary"
-              onClick={() => {
-                signAndExecuteTransaction(
-                  {
-                    transaction: tx,
-                  },
-                  {
-                    onSuccess: (result) => {
-                      console.log("executed create pool transaction", result);
-                      setDigest(result.digest);
-                    },
-                  },
-                );
-              }}
-            >
-              Create Pool
-            </Button>
-          </div>
-          <div>Digest: {digest}</div>
-        </>
-      )}
-    </div>
-  );
-}
 
 function QueryWalletBalance() {
   const my_account = useCurrentAccount();
@@ -113,67 +42,36 @@ function QueryWalletBalance() {
   );
 }
 
-function CreatePoolAndPayStream({ updateSuiCoins }: { updateSuiCoins: (coins: any) => void }) {
-
+function QueryPayerPoolList() {
   const my_account = useCurrentAccount();
-  // 获取 SUI coin 对象
-  const mySuiCoins = useSuiClientQuery(
-    'getOwnedObjects',
-    {
-      owner: my_account?.address as string,
-      filter: {
-        MatchAll: [
-          {
-            StructType: "0x2::coin::Coin<0x2::sui::SUI>",
-          },
-          {
-            AddressOwner: my_account?.address as string,
-          },
-        ],
+
+  // 查询共享对象
+  const { data, isLoading, error } =
+    useSuiClientQuery(
+      'getOwnedObjects',
+      {
+        filter: {
+          StructType: 'xxx::xxx::xxx',
+        },
+        owner: my_account?.address!,
+        options: {
+          showContent: true,
+          showOwner: true,
+        },
       },
-      options: {
-        showOwner: true,
-        showType: true,
-      },
-    },
-  );
+    );
 
-  // 使用 useEffect 来更新 SUI coins 和打印日志
-  useEffect(() => {
-    if (mySuiCoins.data) {
-      updateSuiCoins(mySuiCoins.data.data);
-      console.log(`sui coins----: ${JSON.stringify(mySuiCoins.data, null, 2)}`);
-    }
-  }, [mySuiCoins.data, updateSuiCoins]);
-
-
-  // const tx = new Transaction();
-
-  // const tmpCoins = mySuiCoins?.data?.data;
-  // const primaryCoinObj = tx.object(tmpCoins?.[0] as string);
-  // const mergeCoinObjs = tmpCoins?.slice(1) as string[];
-
-  // tx.moveCall({
-  //   target:
-  //     "0x2::pay::join_vec",
-  //   arguments: [
-  //     primaryCoinObj,
-  //     // [tx.object("0x1"), tx.object("0x2")],
-  //     tx.pure(bcs.vector(bcs.Address).serialize(mergeCoinObjs))
-  //   ],
-  // });
-
-
-
-
-  // tx.splitCoins(tx.gas, [100, 200]);
-  // tx.moveCall({ target: '0x2::devnet_nft::mint', arguments: [tx.pure.string(name), tx.pure.string(description), tx.pure.string(image)] });
-
+  // 查询指定对象
+  // const { data, isPending, error, refetch } = useSuiClientQuery(
+  //   'getObject',
+  //   {
+  //       id: my_account?.address as string,
+  //   },
+    
+  // );
 
   return (
-    <div>
-        <pre>{JSON.stringify(mySuiCoins?.data, null, 2)}</pre>
-    </div>
+    <div>{JSON.stringify(data, null, 2)}</div>
   );
 }
 
@@ -195,7 +93,8 @@ const coins: { label: string; value: string }[] = [
 export default function CreatePage() {
   const [form, setForm] = useState({
     token: coins[0].value,
-    amount: 100,
+    poolAmount: 1,
+    amountPerSec: 0.001,
     recipient: "0x999666",
     duration: 1000,
     cancelable: true,
@@ -203,57 +102,44 @@ export default function CreatePage() {
   const [showFixed, setShowFixed] = useState(true);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [customPeriod, setCustomPeriod] = useState({ years: 0, days: 0 });
-  const [suiCoins, setSuiCoins] = useState([]);
+  const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+  const [txDigest, setDigest] = useState("");
 
-
-
-  const updateSuiCoins = useCallback((coins: any) => {
-    setSuiCoins(coins);
-  }, []);
-
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const { mutateAsync: signTransaction } = useSignTransaction();
-  const client = useSuiClient();
-  const currentAccount = useCurrentAccount();
-  async function handleCreate() {
-    // await requestSuiFromFaucetV0({
-    //   host: getFaucetHost('testnet'),
-    //   recipient: '0xfe951e8cb178e2f2653258a280e8f53e88cc0066b924bf2f35c32f6e4cadb6f9'
-    // });
-
-    const mySuiCoinIds = suiCoins?.map((item: any) => item?.data?.objectId).filter(Boolean) ?? [];
-
-    if (mySuiCoinIds.length === 0) {
-      console.error('没有可用的 SUI 币');
-      return;
-    }
-
+  async function CreatePoolAndPayStream() {
     const tx = new Transaction();
-    tx.mergeCoins(mySuiCoinIds[0], mySuiCoinIds.slice(1));
-    console.log(mySuiCoinIds[0]);
-    console.log(mySuiCoinIds.slice(1));
-    console.log(tx);
 
-    tx.splitCoins(tx.gas, [100]);
+    // 1.split coins
+    const [depositCoin] = tx.splitCoins(tx.gas, [10**9 * form.poolAmount]);
 
-    console.log(`tx: ${JSON.stringify(tx, null, 2)}`);
-    signAndExecuteTransaction(
-      {
-        transaction: tx,
-      }, {
-      onSuccess: (result) => {
-          console.log('executed create pool transaction', result);
-
-      },
+    // 2.Calling smart contract function to create payer pool and stream
+    tx.moveCall({
+      target: `0xa60804309db3c87d785ecee5fcdab72aacc13aa567275e2b4d54f5bbf15f525d::liner_pay::createPayPoolAndStream`,
+      arguments: [
+        depositCoin,
+        tx.pure.vector('address', [form.recipient]),
+        tx.pure.vector('u64', [10**9 * form.amountPerSec]),
+        tx.object('0x6'),
+      ],
     });
 
-
-    console.log(`交易: ${JSON.stringify(tx, null, 2)}`);
-
+    signAndExecute(
+      {
+        transaction: tx,
+      },
+      {
+        onError: (err: Error) => {
+          console.error(err.message);
+        },
+        onSuccess: (result) => {
+          console.log("successed create pool and stream, digest :", result.digest);
+          setDigest(result.digest);
+        },
+      },
+    );
   }
+
   return (
     <section className="flex flex-col  gap-4 py-8 md:py-10">
-      <CreatePoolAndPayStream updateSuiCoins={updateSuiCoins} />
       <div className="flex items-center pb-8">
         <IconBack
           className="border border-white rounded-full mr-4"
@@ -345,14 +231,14 @@ export default function CreatePage() {
           </div>
           <div className="form-item">
             <Input
-              label="Amount"
-              placeholder="Fill in the amount"
+              label="AmountPerSecond"
+              placeholder="Fill in the amount per second"
               type="number"
               size="lg"
               labelPlacement="outside"
-              value={form.amount.toString()}
+              value={form.amountPerSec.toString()}
               onValueChange={(value) => {
-                setForm({ ...form, amount: Number(value) });
+                setForm({ ...form, amountPerSec: Number(value) });
               }}
               classNames={{
                 base: "max-w-xs",
@@ -428,11 +314,27 @@ export default function CreatePage() {
         </div>
         <div className="summary basis-[460px] ">
           <div className="show-summary border border-gray-200 rounded-lg p-4 md:p-8">
-            <div className="flex flex-col gap-4"></div>
+            <div className="flex flex-col gap-4">
+            <Input
+              label="PoolAmount"
+              placeholder="Fill in the pool amount"
+              type="number"
+              size="lg"
+              labelPlacement="outside"
+              value={form.poolAmount.toString()}
+              onValueChange={(value) => {
+                setForm({ ...form, poolAmount: Number(value) });
+              }}
+              classNames={{
+                base: "max-w-xs",
+              }}
+              />
+            </div>
           </div>
-          <Button className="w-full mt-4" color="primary" size="lg" onClick={handleCreate}>
+          <Button className="w-full mt-4" color="primary" size="lg" onClick={CreatePoolAndPayStream}>
             Create
           </Button>
+          <div>https://suiscan.xyz/testnet/tx/{txDigest}</div>
         </div>
       </div>
     </section>

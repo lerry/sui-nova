@@ -12,14 +12,15 @@ import "@mysten/dapp-kit/dist/index.css";
 import { Transaction } from "@mysten/sui/transactions";
 import { Button, useDisclosure } from "@nextui-org/react";
 
-import { IconBack } from "@/components/icons";
-import { title } from "@/components/primitives";
 import { FormDataProps, TokenProps } from "./types";
-import { cn, checkSuiAddress } from "@/utils";
 import { CreateForm } from "./create-form";
 import { SummaryPanel } from "./summary-panel";
 import { Warning } from "./Warning";
 import { TxDialog } from "./tx-dialog";
+
+import { cn, checkSuiAddress } from "@/utils";
+import { title } from "@/components/primitives";
+import { IconBack } from "@/components/icons";
 
 const tokens: TokenProps[] = [
   {
@@ -130,15 +131,15 @@ export default function CreatePage() {
   return (
     <section className="flex flex-col  gap-4 py-8 md:py-10">
       <TxDialog
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
         failedMessage={failedMessage}
+        isOpen={isOpen}
         txDigest={txDigest}
+        onOpenChange={onOpenChange}
       />
       <div className="flex items-center pb-8">
         <Link href="/app">
           <IconBack
-            className="border border-white rounded-full mr-4 cursor-pointer"
+            className="border border-white rounded-full mr-4 cursor-pointer hover:scale-105 transition-all"
             color="white"
             height={35}
             width={35}

@@ -4,20 +4,15 @@ import { useEffect, useState } from "react";
 import "@mysten/dapp-kit/dist/index.css";
 import {
   CircularProgress,
-  Card,
   Button,
-  CardBody,
-  CardFooter,
-  Chip,
   Snippet,
   Breadcrumbs,
   BreadcrumbItem,
   Divider,
 } from "@nextui-org/react";
-
 import Link from "next/link";
+
 import { IconBack } from "@/components/icons";
-import { title } from "@/components/primitives";
 
 const beginTime = Date.now();
 const totalAmount = 1000;
@@ -61,39 +56,45 @@ const fakeInfo = [
 ];
 
 export default function CreatePage() {
-  const [value, setValue] = useState(currentAmount);
+  const [value, setValue] = useState((currentAmount / totalAmount) * 100);
 
   useEffect(() => {
     const interval = setInterval(() => {
       const timeDiff = Date.now() - beginTime;
-      const percentage =
-        (currentAmount / totalAmount) * 100 + (timeDiff / willEndSeconds) * 100;
-      console.log(percentage);
-      setValue(percentage);
+
+      if (timeDiff > 0) {
+        const percentage =
+          (currentAmount / totalAmount) * 100 +
+          (timeDiff / willEndSeconds) * 100;
+
+        setValue(percentage);
+      }
     }, 500);
+
     return () => clearInterval(interval);
   }, []);
+
   return (
     <section className="gap-8 md:py-10">
       <div className="show-stream flex gap-4 flex-col lg:flex-row">
         <div className="show-graph bg-[#26262c] rounded-lg p-4 flex justify-center items-center relative flex-1 bg-gradient-to-r from-background/10 to-background">
           <CircularProgress
+            aria-label="current value"
             classNames={{
               svg: "lg:w-96 lg:h-96 w-64 h-64 md:w-72 md:h-72",
               indicator: "stroke-primary",
               track: "stroke-primary/10",
               value: "text-3xl font-semibold text-primary",
             }}
-            value={value}
             strokeWidth={2}
-            aria-label="current value"
+            value={value}
           />
           <div
-            className="show-value absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center  font-mono"
             aria-live="polite"
+            className="show-value absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center  font-mono"
           >
             <div className="icon">
-              <img src="/tokens/SUI.svg" alt="sui-icon" className="w-8" />
+              <img alt="sui-icon" className="w-8" src="/tokens/SUI.svg" />
             </div>
             <div className="text-2xl font-semibold mt-4">
               {((totalAmount * value) / 100).toFixed(4)}
@@ -124,14 +125,14 @@ export default function CreatePage() {
             <div className="content ">
               {fakeInfo.map((item) => (
                 <div
-                  className="item text-sm text-foreground/70 flex items-center justify-between h-10"
                   key={item.label}
+                  className="item text-sm text-foreground/70 flex items-center justify-between h-10"
                 >
                   <div className="label ">{item.label} </div>
                   {item.label === "Stream ID" ||
                   item.label === "From Address" ||
                   item.label === "To Address" ? (
-                    <Snippet className="text-sm" size="sm" hideSymbol={true}>
+                    <Snippet className="text-sm" hideSymbol={true} size="sm">
                       {item.value}
                     </Snippet>
                   ) : (

@@ -1,8 +1,5 @@
 "use client";
-
 import { useEffect } from "react";
-import { Metadata } from "next";
-
 import "@mysten/dapp-kit/dist/index.css";
 import { useState } from "react";
 import {
@@ -17,11 +14,8 @@ import React from "react";
 
 import { FixedDatesPicker } from "./fixed-dates-picker";
 import { FormDataProps, TokenProps } from "./types";
-import { cn } from "@/utils";
 
-export const metadata: Metadata = {
-  title: "Create Stream",
-};
+import { cn } from "@/utils";
 
 export function CreateForm({
   className,
@@ -34,8 +28,7 @@ export function CreateForm({
   updateForm: (form: FormDataProps) => void;
   formData: FormDataProps;
 }) {
-  const [showFixed, setShowFixed] = useState(true);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen, onOpenChange } = useDisclosure();
   const [customPeriod, setCustomPeriod] = useState({ years: 0, days: 0 });
 
   useEffect(() => {

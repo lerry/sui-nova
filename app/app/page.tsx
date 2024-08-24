@@ -1,19 +1,16 @@
 "use client";
 import { useState } from "react";
-import { Tabs, Tab, CircularProgress } from "@nextui-org/react";
-
 import { useRouter } from "next/navigation";
-import { Link } from "@nextui-org/react";
+import Link from "next/link";
 import {
+  Tabs,
+  Tab,
+  CircularProgress,
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
   Button,
-} from "@nextui-org/react";
-import { Breadcrumbs, BreadcrumbItem } from "@nextui-org/react";
-import React from "react";
-import {
   Table,
   TableHeader,
   TableColumn,
@@ -25,13 +22,6 @@ import {
 import { cn } from "@/utils";
 import { title } from "@/components/primitives";
 import { IconMoreVertical } from "@/components/icons";
-function BreadcrumbsComponent() {
-  return (
-    <Breadcrumbs>
-      <BreadcrumbItem href="/app">All Streams</BreadcrumbItem>
-    </Breadcrumbs>
-  );
-}
 
 const tabs = [
   {
@@ -122,7 +112,7 @@ const fakeStreams = [
   },
 ];
 
-function StreamActions({ stream }: { stream: (typeof fakeStreams)[0] }) {
+function StreamActions() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -156,7 +146,7 @@ export default function AppPage() {
   return (
     <section className="flex flex-col gap-4">
       <h1 className={cn(title(), "!text-2xl py-6")}>All Streams</h1>
-      <div className="flex justify-between min-w-md overflow-x-auto   flex-col-reverse lg:flex-row">
+      <div className="flex justify-between min-w-md overflow-x-auto flex-col-reverse lg:flex-row">
         <Tabs
           aria-label="Options"
           color="primary"
@@ -170,10 +160,10 @@ export default function AppPage() {
         </Tabs>
         <Button
           as={Link}
+          className="lg:mt-0 mb-4"
           color="primary"
           href="/create"
           size="lg"
-          className="lg:mt-0 mb-4"
         >
           Create Stream
         </Button>
@@ -216,11 +206,11 @@ export default function AppPage() {
                 {/* <TableCell>{stream.endsAt}</TableCell> */}
                 <TableCell>
                   <CircularProgress
-                    value={parseInt(stream.progress)}
-                    size="lg"
-                    color="primary"
                     aria-label="Loading..."
+                    color="primary"
                     showValueLabel={true}
+                    size="lg"
+                    value={parseInt(stream.progress)}
                   />
                 </TableCell>
                 <TableCell>

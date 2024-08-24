@@ -33,5 +33,6 @@ export function cn(...inputs: ClassValue[]) {
 // In Sui, an address is 32 bytes and is often encoded in hexadecimal with a 0x prefix.
 export function checkSuiAddress(address: string) {
   const bytesOfAddress = Buffer.from(address.slice(2), "hex");
+
   return address.startsWith("0x") && bytesOfAddress.length === 32;
 }

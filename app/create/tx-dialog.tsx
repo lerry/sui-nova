@@ -6,7 +6,6 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  useDisclosure,
 } from "@nextui-org/react";
 
 export function TxDialog({
@@ -21,7 +20,7 @@ export function TxDialog({
   txDigest: string;
 }) {
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange} backdrop="blur">
+    <Modal backdrop="blur" isOpen={isOpen} onOpenChange={onOpenChange}>
       <ModalContent>
         {(onClose) => (
           <>
@@ -46,8 +45,8 @@ export function TxDialog({
             </ModalBody>
             <ModalFooter>
               <Button
-                onPress={onClose}
                 isDisabled={!txDigest && !failedMessage}
+                onPress={onClose}
               >
                 Close
               </Button>

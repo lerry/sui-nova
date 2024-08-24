@@ -112,7 +112,7 @@ const fakeStreams = [
   },
 ];
 
-function StreamActions() {
+function StreamActions({ stream }: { stream: (typeof fakeStreams)[0] }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (

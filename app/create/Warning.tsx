@@ -20,6 +20,10 @@ export function Warning({
       setWarningText("Insufficient balance");
     } else if (!form.duration) {
       setWarningText("Please select a duration");
+    } else if (!form.recipient) {
+      setWarningText("Please input a recipient");
+    } else if (!form.amount) {
+      setWarningText("Please input the amount");
     } else {
       setWarningText("");
     }

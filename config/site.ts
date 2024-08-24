@@ -1,8 +1,8 @@
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: "SUI-NOVA",
-  description: "SUI-NOVA",
+  name: "Sui-Nova",
+  description: "Smart streams for smarter payments",
   navItems: [
     // {
     //   label: "Home",
